@@ -292,6 +292,25 @@ test('l’étalement est irrégulier, et change à chaque fois qu’on remet le 
 	});
 });
 
+test('quand la carte du dessus part, les autres ne bougent pas d’un pouce', TEST_TIMEOUT, async () => {
+	await withApp({}, async (page) => {
+		const depart = await page.evaluate<number[]>(HAUTS);
+		for (let partie = 1; partie <= 3; partie++) {
+			await toucher(page);
+			await toucher(page);
+			await expectDessus(page, partie, COUNT);
+			const hauts = await page.evaluate<number[]>(HAUTS);
+			assert.deepEqual(
+				hauts.slice(partie),
+				depart.slice(partie),
+				`après ${partie} carte(s) sortie(s), les cartes restantes ont bougé (${hauts.join(', ')})`,
+			);
+			// Et celle qui vient de partir est bel et bien hors du cadre.
+			assert.ok(hauts[partie - 1]! + 1 < 0, `la carte ${partie} est encore visible (${hauts[partie - 1]})`);
+		}
+	});
+});
+
 test('un rechargement de la page ne redistribue pas les cartes', TEST_TIMEOUT, async () => {
 	// L'étalement est gardé le temps de la session, comme l'état du paquet : une mise à jour
 	// installée en pleine routine ne doit pas réétaler le paquet sous les yeux du public.

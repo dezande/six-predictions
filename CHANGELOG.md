@@ -10,11 +10,21 @@ Les numéros suivent [semver](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORR
 
 | Version | Commits | Date | En une phrase |
 | --- | --- | --- | --- |
+| [0.4.0] | 4 | 2026-09-22 | Les cartes restantes ne remontent plus quand celle du dessus part |
 | [0.3.0] | 3 | 2026-09-22 | Le paquet remplit la fenêtre, étalé à la main et jamais deux fois pareil |
 | [0.2.0] | 2 | 2026-09-22 | Paquet étalé, retournement sans couture, dos Art déco et Art nouveau |
 | [0.1.0] | 1 | 2026-09-22 | Première version : six cartes à prédictions, PWA hors-ligne |
 
 ---
+
+## [0.4.0] — 2026-09-22
+
+4 commits
+
+- **Les cartes restantes ne bougent plus quand celle du dessus s'envole.** L'étalement était calculé sur le rang d'une carte dans la pile : chaque départ faisait remonter tout le paquet d'un cran. Il l'est maintenant sur la carte elle-même, une fois pour toutes — une carte posée là y reste jusqu'à ce qu'elle sorte du cadre, et le paquet se vide par le haut comme un vrai étalement sur une table dont on retire les cartes une à une. La place d'une carte ne dépend plus du nombre de cartes déjà sorties.
+- **Le vol part de la place où la carte était posée**, et non plus du centre du cadre : la carte remonte d'une hauteur d'écran plus une hauteur de carte, si bien qu'elle finit hors du cadre d'où qu'elle parte, même du bas de l'étalement. Le vol dure un peu plus longtemps (0,65 s) pour couvrir cette distance sans se presser.
+- L'ordre d'empilement suit désormais le rang de la carte dans le paquet, et non sa profondeur du moment : il ne change plus en cours de routine.
+- Un test dans Chrome retire trois cartes l'une après l'autre et vérifie, à chaque fois, que les cartes restantes sont exactement où elles étaient — et que celle qui vient de partir est bel et bien hors du cadre.
 
 ## [0.3.0] — 2026-09-22
 
@@ -86,6 +96,7 @@ gh release create v0.2.0 --title "v0.2.0 — Titre" --notes-file notes.md
 
 
 
+[0.4.0]: https://github.com/dezande/six-predictions/releases/tag/v0.4.0
 [0.3.0]: https://github.com/dezande/six-predictions/releases/tag/v0.3.0
 [0.2.0]: https://github.com/dezande/six-predictions/releases/tag/v0.2.0
 [0.1.0]: https://github.com/dezande/six-predictions/releases/tag/v0.1.0

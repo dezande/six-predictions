@@ -44,6 +44,7 @@ function nouvelEtalement(): void {
 	semis = nouveauSemis();
 	storeSemis(semis);
 	etalement = crans(semis, carteCount);
+	placer();
 }
 
 /* ---------- Construction ---------- */
@@ -85,6 +86,22 @@ function buildCarte(index: number): HTMLElement {
 /** Les cartes construites, de la première (dessus du paquet) à la dernière. */
 let carteEls: HTMLElement[] = [];
 
+/**
+ * Pose chaque carte à sa place dans l'étalement. Cette place est celle de la carte, pas celle de
+ * son rang dans la pile : quand la carte du dessus s'envole, les autres ne bougent pas d'un pouce.
+ * Elle ne change donc qu'à la remise du paquet, qui en tire un nouvel étalement.
+ */
+function placer(): void {
+	carteEls.forEach((el, i) => {
+		const cran = etalement[i]!;
+		el.style.setProperty('--dy', String(cran.dy));
+		el.style.setProperty('--dx', String(cran.dx));
+		el.style.setProperty('--rot', String(cran.rot));
+		// L'ordre d'empilement suit le paquet, et lui seul : la première carte par-dessus toutes.
+		el.style.setProperty('--rang', String(i));
+	});
+}
+
 /** (Re)construit toutes les cartes dans la langue en cours, sans changer l'état du paquet. */
 function buildAll(): void {
 	carteEls = CARTES.map((_, index) => buildCarte(index));
@@ -92,6 +109,7 @@ function buildAll(): void {
 	// posée pour passer par-dessus, l'ordre d'empilement étant aussi réglé par z-index.
 	paquetEl.replaceChildren(...carteEls);
 	fitted.clear();
+	placer();
 	render();
 }
 
@@ -172,12 +190,6 @@ function render(): void {
 		// Une carte sortie garde sa face visible : elle s'envole prédiction en l'air, jamais
 		// en se refermant au passage.
 		el.classList.toggle('retournee', profondeur < 0 || (profondeur === 0 && etat.retournee));
-		el.style.setProperty('--profondeur', String(Math.max(0, profondeur)));
-		// Une carte sortie garde la place qu'elle occupait sur le dessus : elle s'envole de là.
-		const cran = etalement[Math.max(0, Math.min(profondeur, etalement.length - 1))]!;
-		el.style.setProperty('--dy', String(cran.dy));
-		el.style.setProperty('--dx', String(cran.dx));
-		el.style.setProperty('--rot', String(cran.rot));
 		// Seule la carte retournée est à lire : le dos et les cartes sorties ne disent rien.
 		el.setAttribute('aria-hidden', String(profondeur !== 0 || !etat.retournee));
 		ensureFit(el);
@@ -236,8 +248,8 @@ export function toucher(): void {
  */
 export function remettrePaquet(): void {
 	prochainToucherA = 0;
-	nouvelEtalement();
 	sansAnimation(() => {
+		nouvelEtalement();
 		etat = remettre();
 		storeEtat(etat);
 		render();

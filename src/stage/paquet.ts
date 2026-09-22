@@ -25,6 +25,7 @@ import { $ } from '../kit/web/dom.ts';
 // Rotation calculée avant le premier ajustement du texte.
 import '../kit/web/orientation.ts';
 import { buildDos } from './dos.ts';
+import { buildSoulignement } from './ecriture.ts';
 
 const paquetEl = $('#paquet');
 const annonceEl = $('#annonce');
@@ -79,9 +80,21 @@ function buildCarte(index: number): HTMLElement {
 		p.className = 'entete';
 		p.textContent = entete;
 	}
-	const prediction = corps.appendChild(document.createElement('p'));
+	/*
+	 * Le bloc écrit : la prédiction et son soulignement, d'un seul tenant. Il se mesure et pivote
+	 * ensemble (stage/paquet.ts : fit), si bien que le trait suit toujours le mot.
+	 */
+	const ecriture = corps.appendChild(document.createElement('div'));
+	ecriture.className = 'ecriture';
+	const prediction = ecriture.appendChild(document.createElement('p'));
 	prediction.className = 'prediction';
-	prediction.textContent = t(carte.texte, lang) ?? '';
+	// Un retour à la ligne dans le texte casse la ligne, et lui seul : une ligne n'est jamais
+	// coupée automatiquement (styles/_cartes.scss), pour que l'auteur décide de la mise en page.
+	(t(carte.texte, lang) ?? '').split('\n').forEach((ligne, n) => {
+		if (n > 0) prediction.append(document.createElement('br'));
+		prediction.append(ligne);
+	});
+	ecriture.appendChild(buildSoulignement(index));
 	return el;
 }
 
@@ -126,33 +139,73 @@ onLangChange(buildAll);
 /** Plus petite échelle du texte : en dessous, mieux vaut raccourcir la prédiction. */
 const MIN_FIT = 0.25;
 /**
+ * Plus grande échelle du texte. La prédiction ne fait pas que rétrécir quand elle est longue :
+ * elle grandit jusqu'à remplir la carte quand elle est courte — « NO! » doit frapper plein cadre,
+ * pas flotter au milieu. Ce plafond n'est qu'une borne de recherche, jamais atteinte en pratique.
+ */
+const MAX_FIT = 12;
+/**
  * Marge de sécurité de l'ajustement, en pixels : une carte « tout juste » déborderait au moindre
  * écart de police ou d'arrondi (les polices manuscrites diffèrent d'un appareil à l'autre).
  */
 const FIT_MARGIN_PX = 4;
 
 /**
- * Plus grande échelle (--fit, entre MIN_FIT et 1) à laquelle la prédiction tient dans la carte,
- * sans débordement en hauteur ni mot coupé en largeur. Recherche par dichotomie.
+ * Gain minimal pour qu'une prédiction soit écrite en diagonale plutôt qu'à l'horizontale. En
+ * dessous, la carte penche pour rien : un mot court tient déjà pleine largeur, et l'incliner ne
+ * ferait que le rendre plus difficile à lire.
+ */
+const GAIN_DIAGONALE = 1.12;
+
+/**
+ * Plus grande échelle (--fit, entre MIN_FIT et MAX_FIT) à laquelle le bloc écrit tient dans la
+ * carte, et l'angle auquel il l'atteint. Recherche par dichotomie : la plage est large (une
+ * prédiction d'un mot grandit beaucoup, une longue rétrécit), d'où le nombre de passes.
+ *
+ * Deux sens sont essayés : à plat, et le long de la diagonale de la carte. **Les mots les plus
+ * longs gagnent à être écrits en biais** — la diagonale d'une carte est bien plus longue que sa
+ * largeur — et remplissent alors la carte d'un coin à l'autre. Un mot court reste à plat.
+ *
+ * Le bloc est mesuré sans sa rotation (`offsetWidth`, que les transformations ne changent pas),
+ * et son encombrement une fois penché est calculé : la mesure ne dépend donc ni de l'inclinaison
+ * de la carte dans le paquet, ni de sa réduction au fond de la pile.
  */
 function fit(el: HTMLElement): void {
 	const avant = el.querySelector<HTMLElement>('.avant')!;
-	const corps = el.querySelector<HTMLElement>('.carte-corps')!;
+	const ecriture = el.querySelector<HTMLElement>('.ecriture')!;
 	const style = getComputedStyle(avant);
-	const height = avant.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
-	const fits = (scale: number): boolean => {
+	const width = avant.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - FIT_MARGIN_PX;
+	const height = avant.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - FIT_MARGIN_PX;
+	// La diagonale de la place disponible, du coin bas-gauche au coin haut-droit.
+	const diagonale = -Math.atan(height / width) * (180 / Math.PI);
+
+	/** Le bloc écrit tient-il, à cette échelle et à cet angle ? */
+	const tient = (scale: number, angle: number): boolean => {
 		el.style.setProperty('--fit', String(scale));
-		return corps.scrollHeight <= height - FIT_MARGIN_PX && corps.scrollWidth <= corps.clientWidth;
+		const [w, h] = [ecriture.offsetWidth, ecriture.offsetHeight];
+		const rad = (angle * Math.PI) / 180;
+		const [c, s] = [Math.abs(Math.cos(rad)), Math.abs(Math.sin(rad))];
+		return w * c + h * s <= width && w * s + h * c <= height;
 	};
-	if (fits(1)) return;
-	let lo = MIN_FIT;
-	let hi = 1;
-	for (let step = 0; step < 8; step++) {
-		const mid = (lo + hi) / 2;
-		if (fits(mid)) lo = mid;
-		else hi = mid;
-	}
-	el.style.setProperty('--fit', String(lo));
+
+	/** Plus grande échelle qui tienne à cet angle. */
+	const cherche = (angle: number): number => {
+		let lo = MIN_FIT;
+		let hi = MAX_FIT;
+		for (let step = 0; step < 16; step++) {
+			const mid = (lo + hi) / 2;
+			if (tient(mid, angle)) lo = mid;
+			else hi = mid;
+		}
+		return lo;
+	};
+
+	const plat = cherche(0);
+	// Une prédiction sur plusieurs lignes reste d'aplomb : un pavé de texte en biais ne se lit plus.
+	const enBiais = el.querySelector('.prediction br') === null ? cherche(diagonale) : 0;
+	const biais = enBiais >= plat * GAIN_DIAGONALE;
+	el.style.setProperty('--fit', String(biais ? enBiais : plat));
+	el.style.setProperty('--angle', biais ? `${diagonale.toFixed(2)}deg` : '0deg');
 }
 
 /** Cartes ajustées à la taille d'écran actuelle. */

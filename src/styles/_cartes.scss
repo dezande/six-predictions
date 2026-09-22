@@ -103,6 +103,9 @@
 	--dx: 0;
 	--rot: 0;
 	--rang: 0;
+	// Échelle du texte de la prédiction, calculée par stage/paquet.ts pour remplir la carte.
+	// Elle se pose ici, sur la carte : redéclarée plus bas, elle écraserait la valeur calculée.
+	--fit: 1;
 	@include cover;
 	z-index: calc(100 - var(--rang));
 	// La carte tourne autour de son propre centre : la perspective est posée ici, et nulle part
@@ -187,8 +190,13 @@
 
 .avant {
 	display: grid;
+	// Une colonne qui ne dépasse jamais la carte : sans « minmax(0, 1fr) », la grille s'élargit
+	// au texte le plus large, et l'ajustement (stage/paquet.ts) ne voit plus aucun débordement.
+	grid-template-columns: minmax(0, 1fr);
 	place-items: center;
-	padding: clamp(16px, 9%, 40px);
+	// Marge serrée sur les côtés : la prédiction est ajustée à la largeur, et chaque pixel gagné
+	// ici la fait grandir d'autant. Plus d'air en haut et en bas, où elle a de la place de reste.
+	padding: clamp(14px, 7%, 34px) clamp(10px, 4.5%, 22px);
 	transform: rotateY(180deg);
 	// Papier crème, un peu plus sombre vers les bords, avec un liseré d'encre.
 	background:
@@ -203,9 +211,44 @@
 
 .carte-corps {
 	width: 100%;
-	// --fit : échelle calculée par stage/paquet.ts pour que la prédiction tienne dans la carte.
-	--fit: 1;
+	position: relative;
+	z-index: 1;
 }
+
+/*
+ * Le bloc écrit : la prédiction et son soulignement. Il se serre sur le texte (largeur du contenu)
+ * pour être mesuré tel quel, et pivote d'un bloc — les mots les plus longs sont écrits le long de
+ * la diagonale de la carte (stage/paquet.ts : fit).
+ */
+.ecriture {
+	display: inline-block;
+	// --fit : échelle calculée par stage/paquet.ts pour que le bloc remplisse la carte.
+	font-size: calc(var(--fit) * 38px);
+	transform: rotate(var(--angle, 0deg));
+}
+
+// Le soulignement, juste sous les mots, étiré à leur largeur (stage/ecriture.ts).
+.soulignement {
+	display: block;
+	width: 100%;
+	height: .26em;
+	margin-top: -.03em;
+	// La même encre que les mots : c'est le même stylo qui a souligné.
+	color: inherit;
+	overflow: visible;
+
+	/*
+	 * Le trait a la grosseur des lettres. Deux précautions pour cela : l'épaisseur est donnée en
+	 * `em`, donc relative à la taille du texte, et « non-scaling-stroke » l'empêche de suivre
+	 * l'étirement du repère du dessin — sans quoi le trait s'amincirait sur les mots longs et
+	 * s'épaissirait sur les courts.
+	 */
+	path {
+		stroke-width: .075em;
+		vector-effect: non-scaling-stroke;
+	}
+}
+
 
 .entete {
 	margin: 0 0 calc(var(--fit) * 18px);
@@ -215,17 +258,21 @@
 	color: rgba(28, 39, 67, .5);
 }
 
-// La prédiction elle-même, écrite à la main.
+// La prédiction elle-même, écrite à la main. Sa taille vient du bloc écrit (.ecriture).
 .prediction {
 	margin: 0;
 	font-family: $manuscrit;
-	font-size: calc(var(--fit) * 38px);
 	font-weight: 600;
 	line-height: 1.22;
 	// L'encre d'un stylo : un bleu-noir jamais tout à fait uniforme.
 	color: $encre;
 	text-shadow: 0 1px 0 rgba(255, 255, 255, .5);
-	overflow-wrap: break-word;
+	/*
+	 * Jamais de coupure automatique : une ligne reste d'un seul tenant, et c'est le retour à la
+	 * ligne écrit dans content/cartes.ts qui décide où ça casse. L'ajustement (stage/paquet.ts)
+	 * réduit alors la taille jusqu'à ce que la plus large des lignes tienne dans la carte.
+	 */
+	white-space: nowrap;
 	hyphens: none;
 }
 

@@ -42,8 +42,11 @@ const withApp = (storage: Record<string, string>, run: (page: Page) => Promise<v
 /** Le haut de chaque carte à l'écran, de la première au fond du paquet. */
 const HAUTS = `[...document.querySelectorAll('#paquet .carte')].map((c) => Math.round(c.getBoundingClientRect().top))`;
 
-/** La prédiction lisible sur la carte retournée, dans la langue demandée. */
-const prediction = (index: number, lang: 'fr' | 'en'): string => t(CARTES[index]!.texte, lang)!;
+/**
+ * La prédiction lisible sur la carte retournée, dans la langue demandée. Les retours à la ligne
+ * deviennent des `<br>` : ils disparaissent du textContent, on les retire donc de l'attendu.
+ */
+const prediction = (index: number, lang: 'fr' | 'en'): string => t(CARTES[index]!.texte, lang)!.replaceAll('\n', '');
 
 /* ================= Démarrage ================= */
 
@@ -201,6 +204,8 @@ test('menu : aller à une carte, puis remettre le paquet', TEST_TIMEOUT, async (
 	});
 });
 
+// Les six prédictions actuelles sont les mêmes dans les deux langues (des interjections) : c'est
+// l'interface qui porte la vérification du changement de langue.
 test('menu : la langue change les prédictions et l’interface, et reste enregistrée', TEST_TIMEOUT, async () => {
 	await withApp({}, async (page) => {
 		await toucher(page);
@@ -297,6 +302,66 @@ test('changer de motif ne touche pas au paquet en cours', TEST_TIMEOUT, async ()
 });
 
 /* ================= Affichage ================= */
+
+test('chaque prédiction remplit sa carte', TEST_TIMEOUT, async () => {
+	await withApp({}, async (page) => {
+		// L'ajustement agrandit le texte autant que la carte le permet : un mot court doit frapper
+		// plein cadre, pas flotter au milieu. Le facteur 1 est la taille écrite dans la feuille de
+		// style ; toutes ces prédictions tiennent en un ou trois mots, donc toutes la dépassent.
+		const fits = await page.evaluate<number[]>(
+			`[...document.querySelectorAll('#paquet .carte')].map((c) => Number(c.style.getPropertyValue('--fit')))`,
+		);
+		assert.equal(fits.length, COUNT);
+		for (const [i, fit] of fits.entries()) assert.ok(fit > 1, `la carte ${i + 1} ne remplit pas la carte (--fit ${fit})`);
+
+		// Et le bloc écrit occupe bien la carte : son encombrement à l'écran, inclinaison comprise,
+		// couvre l'essentiel de la largeur de la carte.
+		const remplissage = await page.evaluate<number[]>(`[...document.querySelectorAll('#paquet .carte')].map((c) => {
+			return c.querySelector('.ecriture').getBoundingClientRect().width / c.querySelector('.avant').getBoundingClientRect().width;
+		})`);
+		for (const [i, part] of remplissage.entries()) assert.ok(part > .75, `la carte ${i + 1} laisse du blanc sur les côtés (${part.toFixed(2)})`);
+	});
+});
+
+test('les prédictions les plus longues sont écrites en diagonale', TEST_TIMEOUT, async () => {
+	await withApp({}, async (page) => {
+		const angles = await page.evaluate<number[]>(
+			`[...document.querySelectorAll('#paquet .carte')].map((c) => parseFloat(c.style.getPropertyValue('--angle')))`,
+		);
+		// « NEITHER! » et « NOTHING! » ne tiennent pas en largeur : la diagonale les fait grandir.
+		assert.ok(angles.some((a) => a !== 0), `aucune prédiction en diagonale (${angles.join(', ')})`);
+		// Un mot court reste d'aplomb : l'incliner ne le rendrait pas plus grand, juste moins lisible.
+		assert.equal(angles[0], 0, '« NO! » n’a aucune raison de pencher');
+		// Et un texte sur plusieurs lignes reste toujours d'aplomb.
+		const multiligne = CARTES.findIndex((carte) => (t(carte.texte, 'fr') ?? '').includes('\n'));
+		assert.equal(angles[multiligne], 0, 'un pavé de texte en biais ne se lirait plus');
+	});
+});
+
+test('chaque prédiction est soulignée à la main', TEST_TIMEOUT, async () => {
+	await withApp({}, async (page) => {
+		// Le soulignement fait partie du bloc écrit : il suit le mot, y compris en diagonale.
+		assert.equal(await page.evaluate(`document.querySelectorAll('#paquet .carte .ecriture > svg.soulignement').length`), COUNT);
+		const traits = await page.evaluate<number[]>(
+			`[...document.querySelectorAll('#paquet .carte')].map((c) => c.querySelectorAll('.soulignement path').length)`,
+		);
+		for (const [i, n] of traits.entries()) assert.ok(n >= 1, `la carte ${i + 1} n’est pas soulignée`);
+	});
+});
+
+test('un retour à la ligne dans une prédiction coupe la ligne, et rien d’autre ne la coupe', TEST_TIMEOUT, async () => {
+	await withApp({}, async (page) => {
+		const lignes = await page.evaluate<number[]>(
+			`[...document.querySelectorAll('#paquet .carte .prediction')].map((p) => p.querySelectorAll('br').length + 1)`,
+		);
+		const attendues = CARTES.map((carte) => (t(carte.texte, 'fr') ?? '').split('\n').length);
+		assert.deepEqual(lignes, attendues);
+		// « THIS ONE YES! » tient sur trois lignes, un mot chacune.
+		assert.deepEqual(lignes.filter((n) => n > 1), [3]);
+		// Aucune coupure automatique : chaque ligne reste d'un seul tenant.
+		assert.equal(await page.evaluate(`getComputedStyle(document.querySelector('#paquet .prediction')).whiteSpace`), 'nowrap');
+	});
+});
 
 test('les cartes sont étalées de haut en bas, et la pile tient dans l’écran', TEST_TIMEOUT, async () => {
 	await withApp({}, async (page) => {

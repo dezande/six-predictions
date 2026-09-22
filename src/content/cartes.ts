@@ -8,38 +8,24 @@
  *   entete  une petite ligne au-dessus, plus discrète : une date, un nom, un numéro (facultatif).
  *
  * Chaque texte s'écrit dans les deux langues, `{ fr: '…', en: '…' }` — ou une seule fois, en
- * chaîne, quand il est identique (un nombre, un nom propre). La taille du texte s'ajuste toute
- * seule à la carte : une prédiction longue reste lisible, mais une courte frappe plus fort.
+ * chaîne, quand il est identique dans les deux, ce qui est le cas de ces six-là.
  *
- * TEXTES PROVISOIRES : du lorem ipsum, en attendant les vraies prédictions.
+ * La prédiction **remplit la carte** : sa taille est calculée pour occuper toute la place, aussi
+ * grande que possible. Un mot court frappe donc plein cadre, et un texte long rétrécit juste ce
+ * qu'il faut. Chaque ligne reste d'un seul tenant, jamais coupée au milieu : c'est un retour à la
+ * ligne (`\n`) qui décide où ça casse, et nulle part ailleurs.
+ *
  * Les tests (tests/logic/cartes.test.ts) vérifient la forme de ce fichier, jamais le sens.
  */
 
 import type { Carte } from '../logic/cartes.ts';
 
 export const CARTES: readonly Carte[] = [
-	{
-		entete: { fr: 'Première prédiction', en: 'First prediction' },
-		texte: { fr: 'Lorem ipsum dolor sit amet', en: 'Sed ut perspiciatis unde omnis' },
-	},
-	{
-		entete: { fr: 'Deuxième prédiction', en: 'Second prediction' },
-		texte: { fr: 'Consectetur adipiscing elit', en: 'Iste natus error sit voluptatem' },
-	},
-	{
-		entete: { fr: 'Troisième prédiction', en: 'Third prediction' },
-		texte: { fr: 'Sed do eiusmod tempor incididunt ut labore', en: 'Accusantium doloremque laudantium, totam rem aperiam' },
-	},
-	{
-		entete: { fr: 'Quatrième prédiction', en: 'Fourth prediction' },
-		texte: { fr: 'Ut enim ad minim veniam', en: 'Eaque ipsa quae ab illo inventore' },
-	},
-	{
-		entete: { fr: 'Cinquième prédiction', en: 'Fifth prediction' },
-		texte: { fr: 'Quis nostrud exercitation ullamco laboris', en: 'Veritatis et quasi architecto beatae vitae' },
-	},
-	{
-		entete: { fr: 'Sixième prédiction', en: 'Sixth prediction' },
-		texte: { fr: 'Duis aute irure dolor', en: 'Dicta sunt explicabo' },
-	},
+	{ texte: 'NO!' },
+	{ texte: 'NEITHER!' },
+	{ texte: 'NOTHING!' },
+	{ texte: 'UYYYY!' },
+	// Un mot par ligne : trois retours à la ligne plutôt qu'une phrase qui s'étale.
+	{ texte: 'THIS\nONE\nYES!' },
+	{ texte: 'NONE' },
 ];

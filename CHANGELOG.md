@@ -10,6 +10,7 @@ Les numéros suivent [semver](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORR
 
 | Version | Commits | Date | En une phrase |
 | --- | --- | --- | --- |
+| [1.0.1] | 9 | 2026-09-23 | Les « ! » ne frôlent plus le bord de la carte |
 | [1.0.0] | 8 | 2026-09-23 | Prête pour la scène : la même écriture sur tous les téléphones |
 | [0.6.1] | 7 | 2026-09-23 | Les prédictions en français |
 | [0.6.0] | 6 | 2026-09-23 | Les vraies prédictions, qui remplissent la carte et partent en diagonale |
@@ -20,6 +21,12 @@ Les numéros suivent [semver](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORR
 | [0.1.0] | 1 | 2026-09-22 | Première version : six cartes à prédictions, PWA hors-ligne |
 
 ---
+
+## [1.0.1] — 2026-09-23
+
+9 commits
+
+- **Les « ! » ne frôlent plus le bord de la carte.** L'écriture de Caveat penche, et l'encre d'un point d'exclamation — comme celle d'une majuscule inclinée — sort de la case que le navigateur mesure : le calcul croyait le mot à l'aise là où il touchait presque le bord. Une marge d'encre entoure désormais le texte à l'intérieur du bloc mesuré, et comme elle est donnée en `em`, elle grandit avec lui. Les prédictions perdent un demi pour-cent de taille et gagnent une vraie marge.
 
 ## [1.0.0] — 2026-09-23
 
@@ -147,6 +154,7 @@ gh release create v0.2.0 --title "v0.2.0 — Titre" --notes-file notes.md
 
 
 
+[1.0.1]: https://github.com/dezande/six-predictions/releases/tag/v1.0.1
 [1.0.0]: https://github.com/dezande/six-predictions/releases/tag/v1.0.0
 [0.6.1]: https://github.com/dezande/six-predictions/releases/tag/v0.6.1
 [0.6.0]: https://github.com/dezande/six-predictions/releases/tag/v0.6.0

@@ -11,14 +11,15 @@
  * quelle que soit la façon dont le hasard l'a répartie. C'est ce qui permet à styles/_cartes.scss
  * de calculer une bonne fois la place qu'il lui faut sans jamais déborder de l'écran.
  *
- * Ces écarts valent pour un rang dans la pile, pas pour une carte : la carte du dessus est
- * toujours posée bien droite (rang 0), et les cartes qui restent se replacent au fur et à mesure
- * que les autres sortent du cadre.
+ * Ces écarts valent pour une carte, et pour elle seule : une carte posée là y reste jusqu'à ce
+ * qu'elle sorte du cadre. Quand celle du dessus s'envole, les autres ne remontent pas — c'est un
+ * paquet étalé sur une table, pas une pile qui se tasse. La première carte, elle, est toujours
+ * posée bien droite : c'est celle par laquelle la routine commence.
  */
 
-/** Ce qui décale une carte par rapport à celle du dessus, à son rang dans la pile. */
+/** Ce qui décale une carte par rapport à la première du paquet. */
 export interface Cran {
-	/** Descente, en nombre de crans d'étalement (0 pour la carte du dessus). */
+	/** Descente, en nombre de crans d'étalement (0 pour la première carte). */
 	dy: number;
 	/** Décalage latéral, en pixels. */
 	dx: number;
@@ -48,9 +49,9 @@ function alea(semis: number, rang: number): number {
 export const nouveauSemis = (): number => Math.floor(Math.random() * 0x100000000);
 
 /**
- * Les écarts des `nombre` rangs de la pile, du dessus vers le fond. Le rang 0 est toujours droit,
- * les suivants descendent sans jamais remonter, et le dernier est exactement à `nombre - 1` crans :
- * le hasard change la répartition, jamais la hauteur totale.
+ * Les écarts des `nombre` cartes du paquet, de la première à celle du fond. La première est
+ * toujours droite, les suivantes descendent sans jamais remonter, et la dernière est exactement à
+ * `nombre - 1` crans : le hasard change la répartition, jamais la hauteur totale.
  */
 export function crans(semis: number, nombre: number): Cran[] {
 	if (nombre <= 0) return [];
@@ -59,19 +60,19 @@ export function crans(semis: number, nombre: number): Cran[] {
 
 	// Un écart tiré au sort par intervalle, puis ramenés ensemble à la hauteur voulue.
 	const ecarts: number[] = [];
-	for (let rang = 1; rang < nombre; rang++) {
-		ecarts.push(ECART.min + alea(semis, rang) * (ECART.max - ECART.min));
+	for (let carte = 1; carte < nombre; carte++) {
+		ecarts.push(ECART.min + alea(semis, carte) * (ECART.max - ECART.min));
 	}
 	const total = ecarts.reduce((somme, ecart) => somme + ecart, 0);
 	const facteur = (nombre - 1) / total;
 
 	let dy = 0;
-	for (let rang = 1; rang < nombre; rang++) {
-		dy += ecarts[rang - 1]! * facteur;
+	for (let carte = 1; carte < nombre; carte++) {
+		dy += ecarts[carte - 1]! * facteur;
 		liste.push({
 			dy,
-			dx: (alea(semis, rang + 1000) * 2 - 1) * DX_MAX,
-			rot: PENTE * dy + (alea(semis, rang + 2000) * 2 - 1) * ROT_MAX,
+			dx: (alea(semis, carte + 1000) * 2 - 1) * DX_MAX,
+			rot: PENTE * dy + (alea(semis, carte + 2000) * 2 - 1) * ROT_MAX,
 		});
 	}
 	return liste;

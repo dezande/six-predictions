@@ -66,17 +66,22 @@
 
 .carte {
 	/*
-	 * Où la carte est posée dans la pile. Les trois valeurs sont écrites par stage/paquet.ts,
-	 * d'après l'étalement tiré au sort (logic/etalement.ts) :
-	 *   --dy   descente, en nombre de crans (0 pour la carte du dessus) ;
-	 *   --dx   décalage latéral, en pixels ;
-	 *   --rot  inclinaison, en degrés.
+	 * Où la carte est posée, et à quel rang du paquet. Les quatre valeurs sont écrites une fois
+	 * pour toutes par stage/paquet.ts, d'après l'étalement tiré au sort (logic/etalement.ts) :
+	 *   --dy    descente, en nombre de crans (0 pour la première carte) ;
+	 *   --dx    décalage latéral, en pixels ;
+	 *   --rot   inclinaison, en degrés ;
+	 *   --rang  place dans le paquet, pour l'ordre d'empilement.
+	 *
+	 * Elles ne dépendent pas du nombre de cartes déjà sorties : une carte posée là y reste, et
+	 * quand celle du dessus s'envole, les autres ne remontent pas.
 	 */
 	--dy: 0;
 	--dx: 0;
 	--rot: 0;
+	--rang: 0;
 	@include cover;
-	z-index: calc(100 - var(--profondeur));
+	z-index: calc(100 - var(--rang));
 	// La carte tourne autour de son propre centre : la perspective est posée ici, et nulle part
 	// plus haut, pour qu'aucune carte ne partage d'espace 3D avec une autre.
 	perspective: 1200px;
@@ -89,14 +94,23 @@
 }
 
 /*
- * Sortie du cadre : la carte part vers le haut, en tournant, et disparaît.
- * Elle passe par-dessus tout le paquet le temps de son vol.
+ * Sortie du cadre : la carte part vers le haut, en tournant, et disparaît. Elle passe par-dessus
+ * tout le paquet le temps de son vol.
+ *
+ * Le vol part de la place où la carte était posée, et la remonte d'une hauteur d'écran plus une
+ * hauteur de carte : d'où qu'elle parte, même du bas de l'étalement, elle finit hors du cadre.
  */
 .carte.sortie {
 	z-index: 200;
 	opacity: 0;
-	transform: translate(-26%, -155%) rotate(-17deg) scale(.94);
-	transition: transform .6s cubic-bezier(.36, 0, .66, -.12), opacity .45s ease .22s;
+	transform:
+		translate(
+			calc(var(--dx) * 1px - 26%),
+			calc(var(--dy) * var(--etalement) - var(--app-h) - var(--carte-h) - 20px)
+		)
+		rotate(calc(var(--rot) * 1deg - 17deg))
+		scale(calc(1 - var(--dy) * .012));
+	transition: transform .65s cubic-bezier(.45, 0, .75, .5), opacity .35s ease .34s;
 }
 
 .carte-pivot {

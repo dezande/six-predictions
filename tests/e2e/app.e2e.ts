@@ -8,7 +8,7 @@ import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { Browser, type Page } from '../../src/kit/node/chrome.ts';
+import { Browser, SCREEN, type Page } from '../../src/kit/node/chrome.ts';
 import { startStaticServer, type StaticServer } from '../../src/kit/node/static-server.ts';
 import { CARTES } from '../../src/content/cartes.ts';
 import { t } from '../../src/logic/i18n.ts';
@@ -172,6 +172,19 @@ test('appui de 3 s : le menu s’ouvre, sans toucher à la carte', TEST_TIMEOUT,
 	});
 });
 
+test('menu ouvert : il recouvre le paquet', TEST_TIMEOUT, async () => {
+	// Les cartes s'empilent entre elles avec des z-index élevés : leur empilement doit rester
+	// enfermé dans la scène, sinon une carte passe par-dessus le menu (styles/_table.scss).
+	await withApp({}, async (page) => {
+		await appuiLong(page);
+		await page.waitFor(isMenuOpen, 'menu ouvert');
+		const dansLeMenu = await page.evaluate<boolean>(
+			`Boolean(document.elementFromPoint(${Math.round(CENTER.x)}, ${Math.round(CENTER.y)})?.closest('#menu'))`,
+		);
+		assert.ok(dansLeMenu, 'au centre de l’écran, c’est le menu qui est devant, pas une carte');
+	});
+});
+
 test('menu : aller à une carte, puis remettre le paquet', TEST_TIMEOUT, async () => {
 	await withApp({}, async (page) => {
 		await click(page, '#carte-list button[data-index="4"]');
@@ -201,20 +214,73 @@ test('menu : la langue change les prédictions et l’interface, et reste enregi
 	});
 });
 
-test('menu : le dos des cartes se choisit et reste enregistré', TEST_TIMEOUT, async () => {
+test('menu : le dos des cartes, motif et couleur, se choisit et reste enregistré', TEST_TIMEOUT, async () => {
 	await withApp({}, async (page) => {
-		assert.equal(await page.evaluate(`document.querySelector('#paquet').dataset.dos`), 'bleu');
-		await click(page, '#dos-seg button[data-valeur="rouge"]');
-		await page.waitFor(`document.querySelector('#paquet').dataset.dos === 'rouge'`, 'dos rouge');
+		assert.equal(await page.evaluate(`document.querySelector('#paquet').dataset.couleur`), 'noir');
+		// Chaque carte porte le dessin du motif choisi (stage/dos.ts).
+		assert.equal(await page.evaluate(`document.querySelectorAll('#paquet .carte .dos > svg.dos-motif').length`), COUNT);
+		const decoTraits = await page.evaluate<number>(`document.querySelectorAll('#paquet .carte.dessus .dos-motif path').length`);
+
+		await click(page, '#couleur-seg button[data-valeur="rouge"]');
+		await page.waitFor(`document.querySelector('#paquet').dataset.couleur === 'rouge'`, 'dos rouge');
+		await click(page, '#motif-seg button[data-valeur="nouveau"]');
+		await page.waitFor(`document.querySelectorAll('#paquet .carte .dos > svg.dos-motif').length === ${COUNT}`, 'motif Art nouveau posé');
+		const nouveauTraits = await page.evaluate<number>(`document.querySelectorAll('#paquet .carte.dessus .dos-motif path').length`);
+		assert.notEqual(nouveauTraits, decoTraits, 'les deux motifs ne sont pas le même dessin');
+
 		const stored = await page.evaluate<string>(`localStorage.getItem(${JSON.stringify(SETTINGS_KEY)})`);
-		assert.match(stored, /"dos":"rouge"/);
+		assert.match(stored, /"motif":"nouveau"/);
+		assert.match(stored, /"couleur":"rouge"/);
 
 		await click(page, '#defaults-btn');
-		await page.waitFor(`document.querySelector('#paquet').dataset.dos === 'bleu'`, 'réglages par défaut rétablis');
+		await page.waitFor(`document.querySelector('#paquet').dataset.couleur === 'noir'`, 'réglages par défaut rétablis');
+	});
+});
+
+test('changer de motif ne touche pas au paquet en cours', TEST_TIMEOUT, async () => {
+	await withApp({}, async (page) => {
+		await toucher(page);
+		await toucher(page);
+		await toucher(page);
+		await expectDessus(page, 1, COUNT);
+		assert.equal(await page.evaluate(retournee), true);
+
+		await click(page, '#motif-seg button[data-valeur="nouveau"]');
+		await page.waitFor(`document.querySelectorAll('#paquet .carte .dos > svg.dos-motif').length === ${COUNT}`, 'motif refait');
+		assert.equal(await dessus(page, COUNT), 1, 'la carte du dessus n’a pas bougé');
+		assert.equal(await page.evaluate(retournee), true, 'et elle est toujours retournée');
 	});
 });
 
 /* ================= Affichage ================= */
+
+test('les cartes sont étalées de haut en bas, chacune un cran plus bas', TEST_TIMEOUT, async () => {
+	await withApp({}, async (page) => {
+		const hauts = await page.evaluate<number[]>(
+			`[...document.querySelectorAll('#paquet .carte')].map((c) => Math.round(c.getBoundingClientRect().top))`,
+		);
+		assert.equal(hauts.length, COUNT);
+		for (let i = 1; i < COUNT; i++) {
+			assert.ok(hauts[i]! > hauts[i - 1]!, `la carte ${i + 1} doit être plus bas que la précédente (${hauts.join(', ')})`);
+		}
+		// L'étalement se voit : au moins une dizaine de pixels entre deux cartes voisines.
+		assert.ok(hauts[1]! - hauts[0]! >= 10, `étalement trop discret : ${hauts.join(', ')}`);
+		// Et la pile entière tient dans l'écran.
+		const bas = await page.evaluate<number>(`Math.round(document.querySelector('#paquet .carte:last-child').getBoundingClientRect().bottom)`);
+		assert.ok(bas <= SCREEN.height, `la dernière carte déborde en bas (${bas} > ${SCREEN.height})`);
+	});
+});
+
+test('chaque carte a son propre espace 3D : la carte qui tourne ne coupe pas le plan des autres', TEST_TIMEOUT, async () => {
+	// Sans cela, le navigateur découpe les polygones sur la ligne d'intersection et une couture
+	// apparaît au milieu de la carte, sur l'axe même du retournement.
+	await withApp({}, async (page) => {
+		assert.equal(await page.evaluate(`getComputedStyle(document.querySelector('#paquet')).transformStyle`), 'flat');
+		assert.equal(await page.evaluate(`getComputedStyle(document.querySelector('#stage')).perspective`), 'none');
+		assert.notEqual(await page.evaluate(`getComputedStyle(document.querySelector('#paquet .carte')).perspective`), 'none');
+		assert.equal(await page.evaluate(`getComputedStyle(document.querySelector('#paquet .carte-pivot')).transformStyle`), 'preserve-3d');
+	});
+});
 
 test('aucune prédiction ne déborde de sa carte, dans les deux langues', TEST_TIMEOUT, async () => {
 	await withApp({}, async (page) => {

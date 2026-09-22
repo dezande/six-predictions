@@ -7,15 +7,21 @@
 
 import { isLang, type Lang } from './i18n.ts';
 
-export const DOS = ['bleu', 'rouge', 'encre'] as const;
-/** Couleur du dos des cartes, choisie dans le menu. */
-export type Dos = (typeof DOS)[number];
+export const MOTIFS = ['deco', 'nouveau'] as const;
+/** Dessin du dos des cartes : Art déco (géométrique) ou Art nouveau (végétal). Voir stage/dos.ts. */
+export type Motif = (typeof MOTIFS)[number];
+
+export const COULEURS = ['noir', 'rouge'] as const;
+/** Couleur du dos des cartes, sous le motif doré. */
+export type Couleur = (typeof COULEURS)[number];
 
 export interface Settings {
 	/** Langue des prédictions et de l'interface. */
 	langue: Lang;
+	/** Dessin du dos des cartes. */
+	motif: Motif;
 	/** Couleur du dos des cartes. */
-	dos: Dos;
+	couleur: Couleur;
 	/** Jauge de l'appui long : aide visuelle, à masquer si le public voit l'écran. */
 	showHoldRing: boolean;
 }
@@ -26,12 +32,14 @@ export interface Settings {
  */
 export const DEFAULTS: Readonly<Settings> = Object.freeze({
 	langue: 'fr',
-	dos: 'bleu',
+	motif: 'deco',
+	couleur: 'noir',
 	showHoldRing: true,
 });
 
 const bool = (v: unknown, fallback: boolean): boolean => (typeof v === 'boolean' ? v : fallback);
-const isDos = (v: unknown): v is Dos => DOS.includes(v as Dos);
+const isMotif = (v: unknown): v is Motif => MOTIFS.includes(v as Motif);
+const isCouleur = (v: unknown): v is Couleur => COULEURS.includes(v as Couleur);
 
 /**
  * Réglages valides à partir de n'importe quelle donnée : chaque champ invalide reprend sa valeur
@@ -42,7 +50,8 @@ export function sanitizeSettings(raw: unknown, defaultLang: Lang = DEFAULTS.lang
 	const src: Partial<Record<keyof Settings, unknown>> = raw && typeof raw === 'object' ? raw : {};
 	return {
 		langue: isLang(src.langue) ? src.langue : defaultLang,
-		dos: isDos(src.dos) ? src.dos : DEFAULTS.dos,
+		motif: isMotif(src.motif) ? src.motif : DEFAULTS.motif,
+		couleur: isCouleur(src.couleur) ? src.couleur : DEFAULTS.couleur,
 		showHoldRing: bool(src.showHoldRing, DEFAULTS.showHoldRing),
 	};
 }

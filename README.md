@@ -52,13 +52,22 @@ Les gestes sont réglés pour un vrai doigt : un toucher peut durer jusqu'à 0,8
 
 Les prédictions sont écrites **à la main**, à l'encre bleu-noir sur un papier crème. L'app ne télécharge aucune police : elle prend la meilleure police manuscrite déjà installée sur l'appareil (`Bradley Hand` et `Noteworthy` sur iPhone et iPad, `Segoe Script` ou `Ink Free` sur Windows, à défaut l'écriture manuscrite du système). L'aspect varie donc un peu d'un appareil à l'autre — c'est le prix du hors-ligne intégral.
 
-Le **dos des cartes** se choisit dans le menu : bleu, rouge ou encre. Les cartes du dessous sont légèrement décalées et inclinées, comme un vrai paquet posé à plat ; au-delà de la troisième, la pile n'épaissit plus.
+Le **dos des cartes** se choisit dans le menu, en deux réglages qui se combinent :
+
+| Réglage | Valeurs |
+| --- | --- |
+| Dos des cartes | **Art déco** — soleil levant, chevrons et angles à degrés — ou **Art nouveau** — corolle, tiges et coups de fouet |
+| Couleur du dos | **Noir** ou **Rouge**, le motif restant doré |
+
+Les deux dessins sont des tracés vectoriels ([`src/stage/dos.ts`](src/stage/dos.ts)) : ils restent nets à toutes les tailles d'écran, ne pèsent presque rien dans le cache hors-ligne, et suivent la couleur choisie sans qu'il faille préparer une image par combinaison.
+
+Les six cartes sont **étalées de haut en bas** : chacune descend d'un cran sous la précédente et s'incline à peine, si bien que tout le paquet se voit d'un coup d'œil. L'étalement se calcule sur la hauteur de l'écran, et la carte prend ensuite la plus grande taille qui tienne dans ce qui reste.
 
 ### Français ou anglais
 
 Tout est traduit : les prédictions, le menu et l'aide. La langue se choisit **dans le menu** (`FR` / `EN`) et le choix est enregistré comme les autres réglages. À la toute première ouverture, l'app suit la langue du téléphone : anglais s'il est en anglais, français sinon. « Rétablir les réglages par défaut » y revient.
 
-Le **menu** (appui de 3 s, ou Échap / M) permet d'aller directement à une carte, de remettre le paquet, de choisir la langue et le dos des cartes, et de masquer la jauge de l'appui long — à faire avant de jouer si le public voit l'écran. Le numéro de version de l'app (celui du [journal des versions](CHANGELOG.md)) est affiché sous le titre du menu ; le bas du menu détaille ce qui est vraiment installé sur le téléphone — « 0.1.0 — build 1 (abc1234) », le build étant le nombre de commits — ainsi que l'état du maintien de l'écran allumé et le nom du cache hors-ligne.
+Le **menu** (appui de 3 s, ou Échap / M) permet d'aller directement à une carte, de remettre le paquet, de choisir la langue, le dessin et la couleur du dos des cartes, et de masquer la jauge de l'appui long — à faire avant de jouer si le public voit l'écran. Le numéro de version de l'app (celui du [journal des versions](CHANGELOG.md)) est affiché sous le titre du menu ; le bas du menu détaille ce qui est vraiment installé sur le téléphone — « 0.1.0 — build 1 (abc1234) », le build étant le nombre de commits — ainsi que l'état du maintien de l'écran allumé et le nom du cache hors-ligne.
 
 Juste après l'ouverture du menu par l'appui long, les touchers dans le menu sont ignorés un court instant : le doigt qui se relève ne clique pas sur le bouton placé dessous.
 
@@ -86,7 +95,7 @@ Sur iPhone, l'app installée a son propre stockage, séparé de Safari : **ouvre
 1. **Hors-ligne** : ouvrir l'app installée avec du réseau, ouvrir le menu (appui de 3 s) et vérifier que « Cache hors-ligne » affiche un nom `six-predictions-…`. Fermer l'app (la faire glisser vers le haut dans le sélecteur d'apps), passer en mode avion, la rouvrir, jouer les six cartes et remettre le paquet.
 2. **Écran allumé** : dans Réglages → Luminosité et affichage → Verrouillage automatique, choisir 30 secondes. Ouvrir l'app, toucher une fois l'écran, puis ne plus y toucher pendant 2 minutes : l'écran ne doit ni baisser ni s'éteindre. Refaire le test en mode économie d'énergie, qui peut couper la vidéo. Remettre ensuite le verrouillage automatique habituel.
 3. **Portrait** : tourner le téléphone dans les deux sens ; l'affichage reste dans l'axe du téléphone et les touchers continuent de retourner les cartes.
-4. **L'écriture** : vérifier que les prédictions s'affichent bien en écriture manuscrite, et qu'aucune ne déborde de sa carte.
+4. **L'écriture et le retournement** : vérifier que les prédictions s'affichent bien en écriture manuscrite, qu'aucune ne déborde de sa carte, et que la carte tourne d'un seul tenant, sans trait au milieu.
 5. **Version** : après une publication, rouvrir l'app avec du réseau, la fermer et la rouvrir : le bas du menu doit afficher le nouveau numéro de build et un nouveau nom de cache, et les réglages (langue, dos des cartes) doivent être restés les mêmes. L'app doit s'ouvrir sur un paquet neuf.
 
 ## Publication
@@ -129,13 +138,13 @@ Organisation de `src/` : voir le commentaire en tête de [`src/app.ts`](src/app.
 ### Tests
 
 - **Tests unitaires** (`tests/logic/`) : la logique pure de `src/logic/` sous Node — l'état du paquet (retournement, sortie, remise en place, état relu abîmé), les gestes avec des rythmes lents et hésitants, les touches, les réglages, les langues — et la validité du contenu de `src/content/cartes.ts` et `src/content/interface.ts` dans les deux langues.
-- **Tests dans Chrome** (`tests/e2e/app.e2e.ts`) : l'app compilée dans Chrome sans interface, sur un écran de téléphone simulé, avec de vrais événements tactiles et clavier. La routine entière jusqu'à l'écran vide, le toucher isolé qui ne fait rien et le double toucher qui remet le paquet, deux touchers vifs, le toucher hors de la carte, la reprise du paquet au rechargement et les données abîmées, le clavier, l'appui de 3 s et le menu (aller à une carte, remettre le paquet, langue, dos des cartes, réglages par défaut), aucune prédiction qui déborde dans les deux langues et téléphone tourné, et le fonctionnement hors-ligne.
+- **Tests dans Chrome** (`tests/e2e/app.e2e.ts`) : l'app compilée dans Chrome sans interface, sur un écran de téléphone simulé, avec de vrais événements tactiles et clavier. La routine entière jusqu'à l'écran vide, le toucher isolé qui ne fait rien et le double toucher qui remet le paquet, deux touchers vifs, le toucher hors de la carte, la reprise du paquet au rechargement et les données abîmées, le clavier, l'appui de 3 s et le menu (aller à une carte, remettre le paquet, langue, motif et couleur du dos sans toucher au paquet en cours, réglages par défaut), l'étalement de la pile, l'isolement 3D de chaque carte, aucune prédiction qui déborde dans les deux langues et téléphone tourné, et le fonctionnement hors-ligne.
 - Les outils communs sont dans `tests/e2e/helpers.ts`. Il faut Google Chrome, trouvé automatiquement (sinon, indiquez son chemin dans `CHROME_PATH`).
 - Le calcul du nom de cache au build, la vérification du build, le serveur local et les calculs de rotation sont testés dans le kit.
 
 ### Icônes
 
-L'icône est dessinée dans [`src/icon/icon.svg`](src/icon/icon.svg) : trois cartes en éventail, celle du dessus retournée. Les deux PNG de `public/icons/` en sont rendus avec Chrome sans interface, à refaire après chaque modification du dessin :
+L'icône est dessinée dans [`src/icon/icon.svg`](src/icon/icon.svg) : trois cartes en éventail, celle du dessus retournée. Les dos y sont rouges — les noirs se perdraient dans le fond sombre. Les deux PNG de `public/icons/` en sont rendus avec Chrome sans interface, à refaire après chaque modification du dessin :
 
 ```sh
 for size in 192 512; do

@@ -12,8 +12,8 @@
 			<stop offset="1" stop-color="#08080a"/>
 		</linearGradient>
 		<linearGradient id="dos" x1="0" y1="0" x2="1" y2="1">
-			<stop offset="0" stop-color="#2f5fa8"/>
-			<stop offset="1" stop-color="#12233f"/>
+			<stop offset="0" stop-color="#9c2730"/>
+			<stop offset="1" stop-color="#430e13"/>
 		</linearGradient>
 		<linearGradient id="papier" x1="0" y1="0" x2="0" y2="1">
 			<stop offset="0" stop-color="#fbf6ea"/>
@@ -23,14 +23,16 @@
 
 	<rect width="512" height="512" fill="url(#fond)"/>
 
-	<!-- Les deux cartes du dessous, faces en bas. -->
+	<!-- Les deux cartes du dessous, faces en bas (le dos rouge : le noir se perdrait dans le fond). -->
 	<g transform="rotate(-15 256 300)">
 		<rect x="146" y="112" width="220" height="308" rx="26" fill="url(#dos)"/>
 		<rect x="158" y="124" width="196" height="284" rx="18" fill="none" stroke="#f3ecdd" stroke-width="9"/>
+		<rect x="172" y="138" width="168" height="256" rx="8" fill="none" stroke="#c8a15a" stroke-width="4"/>
 	</g>
 	<g transform="rotate(-7 256 300)">
 		<rect x="146" y="112" width="220" height="308" rx="26" fill="url(#dos)"/>
 		<rect x="158" y="124" width="196" height="284" rx="18" fill="none" stroke="#f3ecdd" stroke-width="9"/>
+		<rect x="172" y="138" width="168" height="256" rx="8" fill="none" stroke="#c8a15a" stroke-width="4"/>
 	</g>
 
 	<!-- La carte du dessus, retournée : la prédiction, écrite à la main. -->

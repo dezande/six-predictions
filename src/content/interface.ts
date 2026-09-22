@@ -18,7 +18,8 @@ export const INTERFACE = {
 	'menu.remettre': { fr: 'Remettre le paquet', en: 'Reset the deck' },
 	'menu.fermer': { fr: 'Fermer', en: 'Close' },
 	'menu.langue': { fr: 'Langue', en: 'Language' },
-	'menu.dos': { fr: 'Dos des cartes', en: 'Card back' },
+	'menu.motif': { fr: 'Dos des cartes', en: 'Card back' },
+	'menu.couleur': { fr: 'Couleur du dos', en: 'Back colour' },
 	'menu.aides': {
 		fr: 'Aides visuelles : à masquer avant de jouer si le public voit l\'écran.',
 		en: 'Visual aids: hide them before performing if the audience can see the screen.',
@@ -50,10 +51,11 @@ export const INTERFACE = {
 		en: 'Keyboard or presenter remote: → space Page Down to tap the card, R to reset the deck, Esc or M for the menu.',
 	},
 
-	// Couleurs du dos des cartes (la valeur enregistrée, elle, ne change pas : logic/settings.ts).
-	'dos.bleu': { fr: 'Bleu', en: 'Blue' },
-	'dos.rouge': { fr: 'Rouge', en: 'Red' },
-	'dos.encre': { fr: 'Encre', en: 'Ink' },
+	// Dos des cartes (la valeur enregistrée, elle, ne change pas : logic/settings.ts).
+	'motif.deco': { fr: 'Art déco', en: 'Art deco' },
+	'motif.nouveau': { fr: 'Art nouveau', en: 'Art nouveau' },
+	'couleur.noir': { fr: 'Noir', en: 'Black' },
+	'couleur.rouge': { fr: 'Rouge', en: 'Red' },
 
 	// Cartes et paquet.
 	'carte.vide': { fr: 'Le paquet est vide', en: 'The deck is empty' },

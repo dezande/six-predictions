@@ -2,7 +2,7 @@
 @use "mixins" as *;
 
 /*
- * Les six cartes, empilées au centre de la scène.
+ * Les six cartes, étalées de haut en bas au centre de la scène.
  *
  * Trois transformations se superposent, chacune sur son élément pour ne pas se gêner :
  *   .carte        place la carte dans la pile (--profondeur), puis la fait sortir du cadre ;
@@ -11,51 +11,61 @@
  */
 
 #paquet {
+	// Décalage vertical d'une carte à la suivante dans la pile. Calculé sur la hauteur de l'écran
+	// et non sur celle de la carte : la taille de la carte dépend de lui, l'inverse tournerait en rond.
+	--etalement: clamp(12px, calc(var(--app-h) * .026), 28px);
+	// Hauteur occupée par l'étalement, sous la carte du dessus (cinq cartes en dessous).
+	--pile: calc(var(--etalement) * 5);
 	// Une carte à jouer : 2,5 × 3,5 pouces. La carte prend la plus grande taille qui tienne dans
-	// l'écran, en largeur comme en hauteur, et sa hauteur commande sa largeur (le rapport est fixe).
+	// l'écran, l'étalement compris, et sa hauteur commande sa largeur (le rapport est fixe).
 	--ratio: .714;
 	--carte-h: min(
 		calc(var(--app-w) * .78 / var(--ratio)),
-		calc((var(--app-h) - var(--safe-t) - var(--safe-b) - 32px) * .92),
-		560px
+		calc((var(--app-h) - var(--safe-t) - var(--safe-b) - 32px - var(--pile)) * .95),
+		520px
 	);
 	--carte-w: calc(var(--carte-h) * var(--ratio));
 	--rayon: clamp(12px, calc(var(--carte-w) * .055), 26px);
 	// Marge de papier du bord des dos. En longueur absolue : un pourcentage n'est pas admis
 	// dans l'étalement d'une ombre, et rendrait toute la déclaration invalide.
 	--marge: clamp(7px, calc(var(--carte-w) * .038), 16px);
-	// Couleurs du dos, remplacées par le réglage « Dos des cartes » (data-dos, logic/settings.ts).
-	--dos-clair: #2f5fa8;
-	--dos-fonce: #12233f;
-	--dos-trait: rgba(255, 255, 255, .16);
 	position: relative;
 	width: var(--carte-w);
 	height: var(--carte-h);
-	transform-style: preserve-3d;
+	// La pile descend sous la carte du dessus : cette marge la remet au centre de l'écran.
+	margin-bottom: var(--pile);
+	/*
+	 * Volontairement plat (transform-style par défaut) : chaque carte porte sa propre perspective.
+	 * Dans un espace 3D partagé, la carte qui tourne couperait le plan des cartes posées à plat,
+	 * et le navigateur découperait les polygones sur la ligne d'intersection — une couture bien
+	 * visible au milieu de la carte, sur l'axe même du retournement.
+	 */
 
-	&[data-dos="rouge"] {
-		--dos-clair: #a8323a;
-		--dos-fonce: #451117;
-	}
+	/* Couleurs du dos, posées par le menu (data-couleur, logic/settings.ts). */
+	--dos-clair: #23242b;
+	--dos-fonce: #0e0f13;
+	--or: #c8a15a;
 
-	&[data-dos="encre"] {
-		--dos-clair: #2a2d36;
-		--dos-fonce: #101218;
-		--dos-trait: rgba(200, 161, 90, .18);
+	&[data-couleur="rouge"] {
+		--dos-clair: #8e2028;
+		--dos-fonce: #430e13;
+		--or: #e3c37f;
 	}
 }
 
 .carte {
-	// Profondeur visible : au-delà de la troisième carte, la pile n'épaissit plus.
-	--p: min(var(--profondeur), 3);
+	// Profondeur visible : les cinq cartes du dessous s'étalent, chacune un cran plus bas.
+	--p: min(var(--profondeur), 5);
 	@include cover;
 	z-index: calc(100 - var(--profondeur));
-	transform-style: preserve-3d;
-	// Les cartes du dessous sont légèrement décalées et inclinées : un vrai paquet posé à plat.
+	// La carte tourne autour de son propre centre : la perspective est posée ici, et nulle part
+	// plus haut, pour qu'aucune carte ne partage d'espace 3D avec une autre.
+	perspective: 1200px;
+	// Les cartes du dessous descendent et s'inclinent à peine : un paquet étalé en biseau.
 	transform:
-		translate(calc(var(--p) * 3px), calc(var(--p) * 7px))
-		rotate(calc(var(--p) * -1.1deg))
-		scale(calc(1 - var(--p) * .018));
+		translate(calc(var(--p) * 1px), calc(var(--p) * var(--etalement)))
+		rotate(calc(var(--p) * -.7deg))
+		scale(calc(1 - var(--p) * .012));
 	transition: transform .5s cubic-bezier(.22, .61, .36, 1), opacity .4s ease;
 }
 
@@ -93,11 +103,7 @@
 /* ---------- Le dos ---------- */
 
 .dos {
-	// Deux trames croisées à 45° sur un fond dégradé : le quadrillage classique d'un dos de carte.
-	background:
-		repeating-linear-gradient(45deg, transparent 0 7px, var(--dos-trait) 7px 8px),
-		repeating-linear-gradient(-45deg, transparent 0 7px, var(--dos-trait) 7px 8px),
-		linear-gradient(155deg, var(--dos-clair), var(--dos-fonce));
+	background: linear-gradient(155deg, var(--dos-clair), var(--dos-fonce));
 	// La marge de papier du bord, puis un filet sombre juste à l'intérieur : les ombres se
 	// peignent dans l'ordre, la première par-dessus les suivantes.
 	box-shadow:
@@ -105,27 +111,20 @@
 		inset 0 0 0 calc(var(--marge) + 1px) rgba(0, 0, 0, .3),
 		0 1px 2px rgba(0, 0, 0, .5),
 		0 18px 36px rgba(0, 0, 0, .45);
+	// Le motif est dessiné en SVG (stage/dos.ts) : il prend cette couleur.
+	color: var(--or);
 }
 
-// L'emblème au centre du dos : un ovale doré, vide.
+/**
+ * Le motif du dos, dessiné à l'intérieur de la marge de papier. Il occupe exactement la place
+ * qu'il lui reste, quelle que soit la taille de la carte (le SVG s'étire avec elle).
+ */
 .dos-motif {
 	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 42%;
-	height: 30%;
-	transform: translate(-50%, -50%);
-	border: 2px solid rgba(200, 161, 90, .55);
-	border-radius: 50%;
-	box-shadow: inset 0 0 0 4px rgba(255, 255, 255, .06);
-
-	&::before {
-		content: "";
-		position: absolute;
-		inset: 14%;
-		border: 1px solid rgba(200, 161, 90, .35);
-		border-radius: 50%;
-	}
+	inset: calc(var(--marge) + 1px);
+	display: block;
+	width: auto;
+	height: auto;
 }
 
 /* ---------- L'avant : la prédiction ---------- */

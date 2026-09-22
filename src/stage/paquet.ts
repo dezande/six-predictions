@@ -17,11 +17,13 @@ import { ui } from '../content/interface.ts';
 import { CARTES } from '../content/cartes.ts';
 import { t } from '../logic/i18n.ts';
 import { allerA, apresToucher, compteurLabel, DEPART, estVide, remettre, sanitizeEtat, type Etat } from '../logic/paquet.ts';
+import type { Motif } from '../logic/settings.ts';
 import { langue, onLangChange } from '../settings/langue.ts';
 import { loadEtat, settings, storeEtat } from '../settings/store.ts';
 import { $ } from '../kit/web/dom.ts';
 // Rotation calculée avant le premier ajustement du texte.
 import '../kit/web/orientation.ts';
+import { buildDos } from './dos.ts';
 
 const paquetEl = $('#paquet');
 const annonceEl = $('#annonce');
@@ -42,11 +44,11 @@ function buildCarte(index: number): HTMLElement {
 	const pivot = el.appendChild(document.createElement('div'));
 	pivot.className = 'carte-pivot';
 
-	// Le dos : un motif dessiné en CSS (styles/_cartes.scss), rien à lire.
+	// Le dos : un dessin SVG (stage/dos.ts), rien à lire.
 	const dos = pivot.appendChild(document.createElement('div'));
 	dos.className = 'carte-face dos';
 	dos.setAttribute('aria-label', ui('carte.dos', lang));
-	dos.appendChild(document.createElement('span')).className = 'dos-motif';
+	dos.appendChild(buildDos(settings.motif));
 
 	// L'avant : la prédiction, dans un corps dont le texte s'ajuste à la carte.
 	const avant = pivot.appendChild(document.createElement('div'));
@@ -222,9 +224,16 @@ export const etatCourant = (): Etat => etat;
 
 /* ---------- Réglages d'affichage ---------- */
 
-/** Applique les réglages en cours : couleur du dos des cartes. */
+/** Motif dessiné sur les dos actuellement en place, pour ne les refaire qu'au vrai changement. */
+let motifPose: Motif | null = null;
+
+/** Applique les réglages en cours : dessin et couleur du dos des cartes. */
 export function applyDisplaySettings(): void {
-	paquetEl.dataset.dos = settings.dos;
+	paquetEl.dataset.couleur = settings.couleur;
+	if (motifPose !== settings.motif) {
+		motifPose = settings.motif;
+		for (const el of carteEls) el.querySelector('.dos')!.replaceChildren(buildDos(settings.motif));
+	}
 	render();
 }
 

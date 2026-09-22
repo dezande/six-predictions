@@ -10,9 +10,24 @@ Les numéros suivent [semver](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORR
 
 | Version | Commits | Date | En une phrase |
 | --- | --- | --- | --- |
+| [0.2.0] | 2 | 2026-09-22 | Paquet étalé, retournement sans couture, dos Art déco et Art nouveau |
 | [0.1.0] | 1 | 2026-09-22 | Première version : six cartes à prédictions, PWA hors-ligne |
 
 ---
+
+## [0.2.0] — 2026-09-22
+
+2 commits
+
+Le paquet se voit mieux, la carte tourne proprement, et les dos valent le coup d'œil.
+
+- **Le retournement ne se fend plus en deux.** Une couture apparaissait au milieu de la carte, exactement sur l'axe de rotation, dès les premiers degrés : les six cartes partageaient un même espace 3D (`transform-style: preserve-3d` sur le paquet), et la carte qui tourne y coupait le plan des cartes posées à plat — le navigateur découpait alors les polygones sur la ligne d'intersection. Chaque carte porte désormais **sa propre perspective**, et le paquet redevient plat : plus aucune carte ne partage d'espace 3D avec une autre. Un test dans Chrome vérifie cet isolement, pour que le défaut ne revienne pas par une retouche de style.
+- **Les six cartes sont étalées de haut en bas** : chacune descend d'un cran sous la précédente et s'incline à peine, au lieu d'un décalage de quelques pixels où seule la carte du dessus se voyait. Tout le paquet se lit d'un coup d'œil. L'étalement se calcule sur la hauteur de l'écran, et la carte prend ensuite la plus grande taille qui tienne dans ce qui reste : la pile ne déborde jamais, même sur un écran court ou téléphone tourné.
+- **Deux dos dessinés, au lieu d'un simple quadrillage** : **Art déco** (soleil levant, chevrons, angles à degrés, losange central) et **Art nouveau** (corolle à quatre pétales, tiges et coups de fouet en miroir). Chacun se choisit **en noir ou en rouge**, le tracé restant doré — quatre dos en tout, réglés dans le menu en deux lignes, « Dos des cartes » et « Couleur du dos ». Les dessins sont des tracés vectoriels (`src/stage/dos.ts`) : nets à toutes les tailles, presque rien dans le cache, et la couleur se change sans préparer d'image.
+- Changer de dos en pleine routine ne touche pas au paquet : la carte du dessus reste où elle est, retournée si elle l'était.
+- **Le menu repasse bien par-dessus le paquet.** La perspective retirée de la scène était aussi ce qui enfermait l'empilement des cartes ; sans elle, une carte serait passée devant le menu. La scène crée maintenant son contexte d'empilement pour elle-même (`isolation: isolate`), et un test dans Chrome vérifie qu'au centre de l'écran, menu ouvert, c'est bien le menu qui est devant.
+- L'ancien réglage `dos` (bleu, rouge, encre) disparaît. Un téléphone qui l'avait enregistré revient au dos par défaut (Art déco noir) et **garde ses autres réglages**, langue comprise ; un test unitaire le vérifie.
+- L'icône de l'app reprend les nouveaux dos, en rouge — les noirs se perdraient dans son fond sombre.
 
 ## [0.1.0] — 2026-09-22
 
@@ -58,4 +73,5 @@ gh release create v0.2.0 --title "v0.2.0 — Titre" --notes-file notes.md
 
 
 
+[0.2.0]: https://github.com/dezande/six-predictions/releases/tag/v0.2.0
 [0.1.0]: https://github.com/dezande/six-predictions/releases/tag/v0.1.0

@@ -13,7 +13,7 @@ import { onWakeChange, type WakeState } from '../kit/web/wake-lock.ts';
 import { carteLabel } from '../logic/cartes.ts';
 import { LANGS } from '../logic/i18n.ts';
 import { compteurLabel, estVide } from '../logic/paquet.ts';
-import { DOS, type Settings } from '../logic/settings.ts';
+import { COULEURS, MOTIFS, type Settings } from '../logic/settings.ts';
 import { allerACarte, applyDisplaySettings, carteCount, etatCourant, remettrePaquet } from '../stage/paquet.ts';
 import { APP_VERSION } from '../version.ts';
 import { langue, onLangChange, setLangue } from './langue.ts';
@@ -68,7 +68,8 @@ function buildSegment(selector: string, valeurs: readonly string[], libelle: (va
 function buildSegments(): void {
 	// Les langues se nomment elles-mêmes : « FR » et « EN », quelle que soit la langue affichée.
 	buildSegment('#langue-seg', LANGS, (valeur) => valeur.toUpperCase(), (valeur) => setLangue(valeur as (typeof LANGS)[number]));
-	buildSegment('#dos-seg', DOS, (valeur) => ui(`dos.${valeur}` as CleInterface, langue()), (valeur) => update({ dos: valeur as Settings['dos'] }));
+	buildSegment('#motif-seg', MOTIFS, (valeur) => ui(`motif.${valeur}` as CleInterface, langue()), (valeur) => update({ motif: valeur as Settings['motif'] }));
+	buildSegment('#couleur-seg', COULEURS, (valeur) => ui(`couleur.${valeur}` as CleInterface, langue()), (valeur) => update({ couleur: valeur as Settings['couleur'] }));
 }
 buildSegments();
 
@@ -80,8 +81,11 @@ function refresh(): void {
 	for (const button of $('#langue-seg').querySelectorAll<HTMLButtonElement>('button')) {
 		button.setAttribute('aria-checked', String(button.dataset.valeur === settings.langue));
 	}
-	for (const button of $('#dos-seg').querySelectorAll<HTMLButtonElement>('button')) {
-		button.setAttribute('aria-checked', String(button.dataset.valeur === settings.dos));
+	for (const button of $('#motif-seg').querySelectorAll<HTMLButtonElement>('button')) {
+		button.setAttribute('aria-checked', String(button.dataset.valeur === settings.motif));
+	}
+	for (const button of $('#couleur-seg').querySelectorAll<HTMLButtonElement>('button')) {
+		button.setAttribute('aria-checked', String(button.dataset.valeur === settings.couleur));
 	}
 	const etat = etatCourant();
 	for (const button of list.querySelectorAll<HTMLButtonElement>('button')) {

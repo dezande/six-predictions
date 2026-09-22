@@ -23,6 +23,7 @@
  *   logic/       logique pure, sans DOM, testée sous Node (tests/logic/)
  *     cartes.ts      forme d'une carte, vérification du contenu, titre court
  *     paquet.ts      l'état du paquet et ce que chaque toucher en fait
+ *     etalement.ts   de combien chaque carte du dessous dépasse de sa voisine, tiré au sort
  *     gestures.ts    décision de chaque geste
  *     keys.ts        touches du clavier
  *     settings.ts    forme et validation des réglages

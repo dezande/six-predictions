@@ -39,6 +39,9 @@ after(async () => {
 const withApp = (storage: Record<string, string>, run: (page: Page) => Promise<void>, url = server.url): Promise<void> =>
 	openApp(browser, url, COUNT, storage, run);
 
+/** Le haut de chaque carte à l'écran, de la première au fond du paquet. */
+const HAUTS = `[...document.querySelectorAll('#paquet .carte')].map((c) => Math.round(c.getBoundingClientRect().top))`;
+
 /** La prédiction lisible sur la carte retournée, dans la langue demandée. */
 const prediction = (index: number, lang: 'fr' | 'en'): string => t(CARTES[index]!.texte, lang)!;
 
@@ -254,20 +257,49 @@ test('changer de motif ne touche pas au paquet en cours', TEST_TIMEOUT, async ()
 
 /* ================= Affichage ================= */
 
-test('les cartes sont étalées de haut en bas, chacune un cran plus bas', TEST_TIMEOUT, async () => {
+test('les cartes sont étalées de haut en bas, et la pile tient dans l’écran', TEST_TIMEOUT, async () => {
 	await withApp({}, async (page) => {
-		const hauts = await page.evaluate<number[]>(
-			`[...document.querySelectorAll('#paquet .carte')].map((c) => Math.round(c.getBoundingClientRect().top))`,
-		);
+		const hauts = await page.evaluate<number[]>(HAUTS);
 		assert.equal(hauts.length, COUNT);
 		for (let i = 1; i < COUNT; i++) {
 			assert.ok(hauts[i]! > hauts[i - 1]!, `la carte ${i + 1} doit être plus bas que la précédente (${hauts.join(', ')})`);
+			assert.ok(hauts[i]! - hauts[i - 1]! >= 15, `étalement trop discret entre les cartes ${i} et ${i + 1} : ${hauts.join(', ')}`);
 		}
-		// L'étalement se voit : au moins une dizaine de pixels entre deux cartes voisines.
-		assert.ok(hauts[1]! - hauts[0]! >= 10, `étalement trop discret : ${hauts.join(', ')}`);
-		// Et la pile entière tient dans l'écran.
+		// La pile occupe une bonne part de la hauteur de l'écran…
 		const bas = await page.evaluate<number>(`Math.round(document.querySelector('#paquet .carte:last-child').getBoundingClientRect().bottom)`);
+		const haut = Math.min(...hauts);
+		assert.ok(bas - haut >= SCREEN.height * .6, `pile trop ramassée : ${bas - haut} px pour un écran de ${SCREEN.height}`);
+		// … sans jamais en sortir, ni en haut ni en bas.
+		assert.ok(haut >= 0, `la première carte déborde en haut (${haut})`);
 		assert.ok(bas <= SCREEN.height, `la dernière carte déborde en bas (${bas} > ${SCREEN.height})`);
+	});
+});
+
+test('l’étalement est irrégulier, et change à chaque fois qu’on remet le paquet', TEST_TIMEOUT, async () => {
+	await withApp({}, async (page) => {
+		const premier = await page.evaluate<number[]>(HAUTS);
+		const ecarts = premier.slice(1).map((haut, i) => haut - premier[i]!);
+		// Un paquet étalé à la main n'a pas deux écarts identiques.
+		assert.ok(Math.max(...ecarts) - Math.min(...ecarts) >= 5, `étalement trop régulier : ${ecarts.join(', ')}`);
+
+		await click(page, '#reset-btn');
+		await page.waitFor(`document.querySelector('#paquet .carte.dessus')?.dataset.index === '0'`, 'paquet remis');
+		const second = await page.evaluate<number[]>(HAUTS);
+		assert.notDeepEqual(second, premier, `le paquet devrait retomber autrement (${premier.join(', ')})`);
+		// Mais il tient toujours dans l'écran, et dans le bon ordre.
+		for (let i = 1; i < COUNT; i++) assert.ok(second[i]! > second[i - 1]!, `ordre rompu : ${second.join(', ')}`);
+		assert.ok(Math.min(...second) >= 0 && Math.max(...second) < SCREEN.height, `pile hors de l’écran : ${second.join(', ')}`);
+	});
+});
+
+test('un rechargement de la page ne redistribue pas les cartes', TEST_TIMEOUT, async () => {
+	// L'étalement est gardé le temps de la session, comme l'état du paquet : une mise à jour
+	// installée en pleine routine ne doit pas réétaler le paquet sous les yeux du public.
+	await withApp({}, async (page) => {
+		const avant = await page.evaluate<number[]>(HAUTS);
+		await page.reload();
+		await page.waitFor(`document.querySelectorAll('#paquet .carte').length === ${COUNT}`, 'app rechargée');
+		assert.deepEqual(await page.evaluate<number[]>(HAUTS), avant);
 	});
 });
 

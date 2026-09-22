@@ -8,4 +8,4 @@
  * version ; le détail (build et commit) reste en bas, dans les informations.
  */
 
-export const APP_VERSION = '0.6.1';
+export const APP_VERSION = '1.0.0';

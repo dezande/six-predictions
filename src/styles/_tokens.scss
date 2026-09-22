@@ -20,7 +20,12 @@ $encre: #1c2743;
 $sans: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
 $serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", "Noto Serif", Georgia, serif;
 
-// Écriture à la main des prédictions. Aucune police n'est téléchargée (l'app est hors-ligne et sa
-// Content-Security-Policy n'autorise que ses propres fichiers) : on prend la meilleure police
-// manuscrite déjà installée sur l'appareil, iPhone et iPad d'abord.
-$manuscrit: "Bradley Hand", "Noteworthy", "Snell Roundhand", "Segoe Script", "Ink Free", "Comic Sans MS", cursive;
+/*
+ * Écriture à la main des prédictions : Caveat, embarquée avec l'app (public/fonts/), et non
+ * téléchargée depuis un serveur de polices — l'app est hors-ligne, et sa Content-Security-Policy
+ * n'autorise que ses propres fichiers. Elle est donc la même sur tous les appareils.
+ *
+ * Les polices système suivent, au cas où le fichier manquerait : Bradley Hand et Noteworthy sur
+ * iPhone et iPad, Segoe Script et Ink Free sur Windows, la cursive du système en dernier recours.
+ */
+$manuscrit: "Caveat", "Bradley Hand", "Noteworthy", "Segoe Script", "Ink Free", cursive;

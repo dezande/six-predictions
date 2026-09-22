@@ -10,6 +10,7 @@ Les numéros suivent [semver](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORR
 
 | Version | Commits | Date | En une phrase |
 | --- | --- | --- | --- |
+| [1.0.0] | 8 | 2026-09-23 | Prête pour la scène : la même écriture sur tous les téléphones |
 | [0.6.1] | 7 | 2026-09-23 | Les prédictions en français |
 | [0.6.0] | 6 | 2026-09-23 | Les vraies prédictions, qui remplissent la carte et partent en diagonale |
 | [0.5.0] | 5 | 2026-09-22 | Tapis vert, six dos et quatre couleurs choisis à l'œil, paquet neuf à chaque ouverture |
@@ -19,6 +20,18 @@ Les numéros suivent [semver](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORR
 | [0.1.0] | 1 | 2026-09-22 | Première version : six cartes à prédictions, PWA hors-ligne |
 
 ---
+
+## [1.0.0] — 2026-09-23
+
+8 commits
+
+**Prête pour la scène.** Les six prédictions sont écrites, la routine se joue du premier toucher au paquet vide, l'app fonctionne hors-ligne et se met à jour toute seule. Ce qui restait à régler tient en une chose : l'écriture.
+
+- **La police manuscrite est maintenant embarquée avec l'app** : Caveat, un stylo à bille nerveux, servie depuis `dist/fonts/` et mise en cache avec le reste. L'app ne demandait jusqu'ici que les polices déjà installées sur l'appareil — parfait sur iPhone, où `Bradley Hand` existe, mais **Android n'en a aucune** et retombait sur une cursive quelconque. L'écriture est désormais la même partout.
+- La police est déclarée en `font-display: block` : la taille du texte est calculée d'après elle, et un changement de police en cours de route ferait sauter la mise en page sous les yeux du public. Venant du cache, l'attente est de toute façon imperceptible.
+- C'est une police variable, sous-ensemble latin : 73 ko pour toutes les graisses de 400 à 700, lettres accentuées et apostrophe typographique comprises. Les polices système restent déclarées derrière, au cas où le fichier manquerait, et le build échoue si la police est absente de `dist/`.
+- Caveat est de The Caveat Project Authors, sous licence SIL Open Font License 1.1 ; le texte de la licence accompagne le fichier dans `public/fonts/OFL.txt`, comme elle l'exige.
+- Correction dans les tests : la vérification « chaque prédiction remplit sa carte » ne regardait que la largeur, et refusait donc une prédiction de trois lignes — qui remplit la carte en hauteur. Elle accepte maintenant l'une ou l'autre dimension.
 
 ## [0.6.1] — 2026-09-23
 
@@ -134,6 +147,7 @@ gh release create v0.2.0 --title "v0.2.0 — Titre" --notes-file notes.md
 
 
 
+[1.0.0]: https://github.com/dezande/six-predictions/releases/tag/v1.0.0
 [0.6.1]: https://github.com/dezande/six-predictions/releases/tag/v0.6.1
 [0.6.0]: https://github.com/dezande/six-predictions/releases/tag/v0.6.0
 [0.5.0]: https://github.com/dezande/six-predictions/releases/tag/v0.5.0

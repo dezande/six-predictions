@@ -312,12 +312,17 @@ test('chaque prédiction remplit sa carte', TEST_TIMEOUT, async () => {
 		assert.equal(fits.length, COUNT);
 		for (const [i, fit] of fits.entries()) assert.ok(fit > 1, `la carte ${i + 1} ne remplit pas la carte (--fit ${fit})`);
 
-		// Et le bloc écrit occupe bien la carte : son encombrement à l'écran, inclinaison comprise,
-		// couvre l'essentiel de la largeur de la carte.
+		/*
+		 * Et le bloc écrit occupe bien la carte : son encombrement à l'écran, inclinaison comprise,
+		 * couvre l'essentiel d'au moins une des deux dimensions. Une des deux seulement : un mot
+		 * seul est limité par la largeur de la carte, un texte de trois lignes par sa hauteur.
+		 */
 		const remplissage = await page.evaluate<number[]>(`[...document.querySelectorAll('#paquet .carte')].map((c) => {
-			return c.querySelector('.ecriture').getBoundingClientRect().width / c.querySelector('.avant').getBoundingClientRect().width;
+			const bloc = c.querySelector('.ecriture').getBoundingClientRect();
+			const carte = c.querySelector('.avant').getBoundingClientRect();
+			return Math.max(bloc.width / carte.width, bloc.height / carte.height);
 		})`);
-		for (const [i, part] of remplissage.entries()) assert.ok(part > .75, `la carte ${i + 1} laisse du blanc sur les côtés (${part.toFixed(2)})`);
+		for (const [i, part] of remplissage.entries()) assert.ok(part > .75, `la carte ${i + 1} ne remplit pas sa carte (${part.toFixed(2)})`);
 	});
 });
 

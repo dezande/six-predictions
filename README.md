@@ -55,7 +55,11 @@ Les gestes sont réglés pour un vrai doigt : un toucher peut durer jusqu'à 0,8
 
 ### Les cartes
 
-Les prédictions sont écrites **à la main**, à l'encre bleu-noir sur un papier crème. L'app ne télécharge aucune police : elle prend la meilleure police manuscrite déjà installée sur l'appareil (`Bradley Hand` et `Noteworthy` sur iPhone et iPad, `Segoe Script` ou `Ink Free` sur Windows, à défaut l'écriture manuscrite du système). L'aspect varie donc un peu d'un appareil à l'autre — c'est le prix du hors-ligne intégral.
+Les prédictions sont écrites **à la main**, à l'encre bleu-noir sur un papier crème, dans la police **[Caveat](https://fonts.google.com/specimen/Caveat)** — un stylo à bille nerveux.
+
+La police est **embarquée avec l'app** (`public/fonts/caveat-latin.woff2`, 73 ko) et non téléchargée depuis un serveur de polices : elle part dans le cache hors-ligne avec le reste, la Content-Security-Policy l'autorise (`font-src 'self'`), et **l'écriture est identique sur tous les appareils**. Sans elle, Android n'a aucune police manuscrite à proposer et retombe sur une cursive quelconque. Les polices système restent déclarées derrière, au cas où le fichier manquerait.
+
+Caveat est de The Caveat Project Authors, sous licence [SIL Open Font License 1.1](public/fonts/OFL.txt) — le texte de la licence accompagne le fichier, comme elle l'exige. C'est une police variable : une seule graisse déclarée de 400 à 700 couvre tous les besoins de l'app, et le sous-ensemble latin suffit (lettres accentuées et apostrophe typographique comprises).
 
 Le **dos des cartes** se choisit dans le menu, en deux réglages qui se combinent — et on les choisit **en les regardant** : chaque bouton montre la petite carte telle qu'elle sera, jamais le nom du style. Les dos sont dessinés dans la couleur en cours, et les couleurs dans le dos en cours.
 
@@ -108,7 +112,7 @@ Sur iPhone, l'app installée a son propre stockage, séparé de Safari : **ouvre
 1. **Hors-ligne** : ouvrir l'app installée avec du réseau, ouvrir le menu (appui de 3 s) et vérifier que « Cache hors-ligne » affiche un nom `six-predictions-…`. Fermer l'app (la faire glisser vers le haut dans le sélecteur d'apps), passer en mode avion, la rouvrir, jouer les six cartes et remettre le paquet.
 2. **Écran allumé** : dans Réglages → Luminosité et affichage → Verrouillage automatique, choisir 30 secondes. Ouvrir l'app, toucher une fois l'écran, puis ne plus y toucher pendant 2 minutes : l'écran ne doit ni baisser ni s'éteindre. Refaire le test en mode économie d'énergie, qui peut couper la vidéo. Remettre ensuite le verrouillage automatique habituel.
 3. **Portrait** : tourner le téléphone dans les deux sens ; l'affichage reste dans l'axe du téléphone, la pile se resserre pour tenir dans l'écran, et les touchers continuent de retourner les cartes.
-4. **L'écriture et le retournement** : vérifier que les prédictions s'affichent bien en écriture manuscrite, qu'elles remplissent la carte sans déborder, que les plus longues partent en diagonale, et que la carte tourne d'un seul tenant, sans trait au milieu.
+4. **L'écriture et le retournement** : vérifier que les prédictions s'affichent bien dans l'écriture de Caveat — la même sur iPhone et sur Android —, qu'elles remplissent la carte sans déborder, que les plus longues partent en diagonale, et que la carte tourne d'un seul tenant, sans trait au milieu.
 5. **Version** : après une publication, rouvrir l'app avec du réseau, la fermer et la rouvrir : le bas du menu doit afficher le nouveau numéro de build et un nouveau nom de cache, et les réglages (langue, dos des cartes) doivent être restés les mêmes. L'app doit s'ouvrir sur les six cartes.
 
 ## Publication

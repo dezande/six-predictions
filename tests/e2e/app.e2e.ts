@@ -14,8 +14,8 @@ import { CARTES } from '../../src/content/cartes.ts';
 import { t } from '../../src/logic/i18n.ts';
 import { APP_VERSION } from '../../src/version.ts';
 import {
-	ANIM_MS, appuiLong, CENTER, click, COIN, DEBORDEMENTS, dessus, doubleToucher, ETAT_KEY, expectDessus, isMenuOpen,
-	openApp, pressKey, retournee, SETTINGS_KEY, sorties, TEST_TIMEOUT, text, toucher, turnPhone, vide,
+	ANIM_MS, appuiLong, CENTER, click, COIN, DEBORDEMENTS, dessus, doubleToucher, expectDessus, isMenuOpen,
+	openApp, pressKey, retournee, SETTINGS_KEY, sorties, TEST_TIMEOUT, text, toucher, turnPhone, vide, viderLePaquet,
 } from './helpers.ts';
 
 const COUNT = CARTES.length;
@@ -92,8 +92,8 @@ test('les six cartes, l’une après l’autre, jusqu’à l’écran vide', TES
 });
 
 test('écran vide : un toucher seul ne fait rien, un double toucher remet le paquet', TEST_TIMEOUT, async () => {
-	// Le paquet est repris vide, sans rejouer toute la routine.
-	await withApp({ [ETAT_KEY]: JSON.stringify({ index: COUNT, retournee: false }) }, async (page) => {
+	await withApp({}, async (page) => {
+		await viderLePaquet(page, COUNT);
 		assert.equal(await page.evaluate(vide), true);
 
 		await toucher(page);
@@ -124,20 +124,20 @@ test('le toucher compte n’importe où sur l’écran, pas seulement sur la car
 	});
 });
 
-/* ================= Reprise de la session ================= */
+/* ================= À chaque ouverture ================= */
 
-test('rechargement de la page : le paquet est retrouvé ; un état abîmé repart à neuf', TEST_TIMEOUT, async () => {
-	await withApp({ [ETAT_KEY]: JSON.stringify({ index: 3, retournee: true }) }, async (page) => {
-		await expectDessus(page, 3, COUNT);
-		assert.equal(await page.evaluate(retournee), true);
-		assert.equal(await page.evaluate(sorties), 3);
-	});
-	await withApp({ [ETAT_KEY]: '{{pas du JSON' }, async (page) => {
-		await expectDessus(page, 0, COUNT);
-	});
-	await withApp({ [ETAT_KEY]: JSON.stringify({ index: 'trois', retournee: 'oui' }) }, async (page) => {
-		await expectDessus(page, 0, COUNT);
-		assert.equal(await page.evaluate(retournee), false);
+test('chaque ouverture redonne les six cartes, même si la routine était en cours', TEST_TIMEOUT, async () => {
+	await withApp({}, async (page) => {
+		await toucher(page);
+		await toucher(page);
+		await toucher(page);
+		await expectDessus(page, 1, COUNT);
+
+		await page.reload();
+		await page.waitFor(`document.querySelectorAll('#paquet .carte').length === ${COUNT}`, 'app rouverte');
+		assert.equal(await dessus(page, COUNT), 0, 'la première carte est de nouveau sur le dessus');
+		assert.equal(await page.evaluate(sorties), 0, 'les six cartes sont là');
+		assert.equal(await page.evaluate(retournee), false, 'faces en bas');
 	});
 });
 
@@ -217,26 +217,67 @@ test('menu : la langue change les prédictions et l’interface, et reste enregi
 	});
 });
 
-test('menu : le dos des cartes, motif et couleur, se choisit et reste enregistré', TEST_TIMEOUT, async () => {
-	await withApp({}, async (page) => {
-		assert.equal(await page.evaluate(`document.querySelector('#paquet').dataset.couleur`), 'noir');
-		// Chaque carte porte le dessin du motif choisi (stage/dos.ts).
-		assert.equal(await page.evaluate(`document.querySelectorAll('#paquet .carte .dos > svg.dos-motif').length`), COUNT);
-		const decoTraits = await page.evaluate<number>(`document.querySelectorAll('#paquet .carte.dessus .dos-motif path').length`);
+/** Les couleurs posées sur les six cartes, et le nombre de traits du dos de chacune. */
+const COULEURS_DES_CARTES = `[...document.querySelectorAll('#paquet .carte')].map((c) => c.dataset.couleur)`;
+const TRAITS_DES_DOS = `[...document.querySelectorAll('#paquet .carte')].map((c) => c.querySelectorAll('.dos-motif path').length)`;
 
-		await click(page, '#couleur-seg button[data-valeur="rouge"]');
-		await page.waitFor(`document.querySelector('#paquet').dataset.couleur === 'rouge'`, 'dos rouge');
-		await click(page, '#motif-seg button[data-valeur="nouveau"]');
-		await page.waitFor(`document.querySelectorAll('#paquet .carte .dos > svg.dos-motif').length === ${COUNT}`, 'motif Art nouveau posé');
-		const nouveauTraits = await page.evaluate<number>(`document.querySelectorAll('#paquet .carte.dessus .dos-motif path').length`);
-		assert.notEqual(nouveauTraits, decoTraits, 'les deux motifs ne sont pas le même dessin');
+test('menu : le dos des cartes, dessin et couleur, se choisit et reste enregistré', TEST_TIMEOUT, async () => {
+	await withApp({}, async (page) => {
+		assert.deepEqual(await page.evaluate(COULEURS_DES_CARTES), Array(COUNT).fill('noir'));
+		// Chaque carte porte le dessin choisi (stage/dos.ts).
+		assert.equal(await page.evaluate(`document.querySelectorAll('#paquet .carte .dos > svg.dos-motif').length`), COUNT);
+		const deco = await page.evaluate<number[]>(TRAITS_DES_DOS);
+
+		await click(page, '#couleur-choix button[data-valeur="bleu"]');
+		await page.waitFor(`document.querySelector('#paquet .carte').dataset.couleur === 'bleu'`, 'dos bleus');
+		assert.deepEqual(await page.evaluate(COULEURS_DES_CARTES), Array(COUNT).fill('bleu'));
+
+		await click(page, '#motif-choix button[data-valeur="pixel"]');
+		await page.waitFor(`document.querySelectorAll('#paquet .carte .dos > svg.dos-motif').length === ${COUNT}`, 'dos pixel art posé');
+		const pixel = await page.evaluate<number[]>(TRAITS_DES_DOS);
+		assert.notDeepEqual(pixel, deco, 'les deux dessins ne sont pas le même');
 
 		const stored = await page.evaluate<string>(`localStorage.getItem(${JSON.stringify(SETTINGS_KEY)})`);
-		assert.match(stored, /"motif":"nouveau"/);
-		assert.match(stored, /"couleur":"rouge"/);
+		assert.match(stored, /"motif":"pixel"/);
+		assert.match(stored, /"couleur":"bleu"/);
 
 		await click(page, '#defaults-btn');
-		await page.waitFor(`document.querySelector('#paquet').dataset.couleur === 'noir'`, 'réglages par défaut rétablis');
+		await page.waitFor(`document.querySelector('#paquet .carte').dataset.couleur === 'noir'`, 'réglages par défaut rétablis');
+	});
+});
+
+test('menu : « mélange » donne un dos et une couleur différents à chaque carte', TEST_TIMEOUT, async () => {
+	await withApp({}, async (page) => {
+		await click(page, '#motif-choix button[data-valeur="mix"]');
+		await click(page, '#couleur-choix button[data-valeur="mix"]');
+		await page.waitFor(`document.querySelectorAll('#paquet .carte .dos > svg.dos-motif').length === ${COUNT}`, 'mélange posé');
+
+		// Six cartes, six dessins : chacun des six dos est représenté une fois.
+		const traits = await page.evaluate<number[]>(TRAITS_DES_DOS);
+		assert.equal(new Set(traits).size, COUNT, `les six dos devraient tous différer (${traits.join(', ')})`);
+		// Quatre couleurs pour six cartes : elles se suivent et recommencent.
+		const couleurs = await page.evaluate<string[]>(COULEURS_DES_CARTES);
+		assert.deepEqual(couleurs, ['noir', 'rouge', 'bleu', 'blanc', 'noir', 'rouge']);
+	});
+});
+
+test('menu : les boutons du dos montrent la carte, pas son nom', TEST_TIMEOUT, async () => {
+	await withApp({}, async (page) => {
+		// Sept dos (six dessins et le mélange), cinq couleurs (quatre et le mélange).
+		assert.equal(await page.evaluate(`document.querySelectorAll('#motif-choix button').length`), 7);
+		assert.equal(await page.evaluate(`document.querySelectorAll('#couleur-choix button').length`), 5);
+		// Aucun texte dans les boutons : on regarde une vignette, dessinée comme les vraies cartes…
+		assert.equal(await page.evaluate(`[...document.querySelectorAll('#motif-choix button, #couleur-choix button')].every((b) => b.textContent.trim() === '')`), true);
+		assert.equal(await page.evaluate(`document.querySelectorAll('#motif-choix .vignette svg.dos-motif').length >= 7`), true);
+		// … mais le nom reste en étiquette, pour les lecteurs d'écran.
+		assert.equal(await page.evaluate(`document.querySelector('#motif-choix button[data-valeur="pop"]').getAttribute('aria-label')`), 'Pop art');
+		assert.equal(await page.evaluate(`document.querySelector('#couleur-choix button[data-valeur="blanc"]').getAttribute('aria-label')`), 'Blanc');
+		// Les vignettes de couleur suivent le dos choisi, et inversement.
+		await click(page, '#motif-choix button[data-valeur="minimal"]');
+		const avant = await page.evaluate<number>(`document.querySelectorAll('#couleur-choix button[data-valeur="noir"] .vignette path').length`);
+		await click(page, '#motif-choix button[data-valeur="pop"]');
+		const apres = await page.evaluate<number>(`document.querySelectorAll('#couleur-choix button[data-valeur="noir"] .vignette path').length`);
+		assert.notEqual(apres, avant, 'les vignettes de couleur devraient montrer le dos choisi');
 	});
 });
 
@@ -248,8 +289,8 @@ test('changer de motif ne touche pas au paquet en cours', TEST_TIMEOUT, async ()
 		await expectDessus(page, 1, COUNT);
 		assert.equal(await page.evaluate(retournee), true);
 
-		await click(page, '#motif-seg button[data-valeur="nouveau"]');
-		await page.waitFor(`document.querySelectorAll('#paquet .carte .dos > svg.dos-motif').length === ${COUNT}`, 'motif refait');
+		await click(page, '#motif-choix button[data-valeur="nouveau"]');
+		await page.waitFor(`document.querySelectorAll('#paquet .carte .dos > svg.dos-motif').length === ${COUNT}`, 'dos refait');
 		assert.equal(await dessus(page, COUNT), 1, 'la carte du dessus n’a pas bougé');
 		assert.equal(await page.evaluate(retournee), true, 'et elle est toujours retournée');
 	});
@@ -311,14 +352,12 @@ test('quand la carte du dessus part, les autres ne bougent pas d’un pouce', TE
 	});
 });
 
-test('un rechargement de la page ne redistribue pas les cartes', TEST_TIMEOUT, async () => {
-	// L'étalement est gardé le temps de la session, comme l'état du paquet : une mise à jour
-	// installée en pleine routine ne doit pas réétaler le paquet sous les yeux du public.
+test('chaque ouverture donne aussi un nouvel étalement', TEST_TIMEOUT, async () => {
 	await withApp({}, async (page) => {
 		const avant = await page.evaluate<number[]>(HAUTS);
 		await page.reload();
-		await page.waitFor(`document.querySelectorAll('#paquet .carte').length === ${COUNT}`, 'app rechargée');
-		assert.deepEqual(await page.evaluate<number[]>(HAUTS), avant);
+		await page.waitFor(`document.querySelectorAll('#paquet .carte').length === ${COUNT}`, 'app rouverte');
+		assert.notDeepEqual(await page.evaluate<number[]>(HAUTS), avant);
 	});
 });
 

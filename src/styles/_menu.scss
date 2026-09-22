@@ -257,3 +257,73 @@
 		line-height: 1.6;
 	}
 }
+
+/*
+ * Choix du dos et de la couleur : on regarde les cartes, on ne lit pas leurs noms. Chaque bouton
+ * porte une petite carte face cachée, dessinée exactement comme celles de la scène (stage/dos.ts).
+ * Le nom du style reste en aria-label, pour les lecteurs d'écran.
+ */
+.vignettes {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 8px;
+
+	.sheet & button {
+		min-height: 0;
+		padding: 6px;
+		border-radius: 10px;
+		border-color: transparent;
+		background: rgba(0, 0, 0, .3);
+
+		&[aria-checked="true"] {
+			border-color: $accent;
+			background: rgba(200, 161, 90, .16);
+		}
+	}
+
+	// Les couleurs tiennent sur une seule rangée.
+	&.couleurs {
+		grid-template-columns: repeat(5, 1fr);
+	}
+}
+
+// Une carte en réduction : le même fond, la même marge de papier, le même dessin.
+.vignette {
+	--marge: 3px;
+	position: relative;
+	display: block;
+	width: 100%;
+	aspect-ratio: 5 / 7;
+	border-radius: 5px;
+	overflow: hidden;
+	background: linear-gradient(155deg, var(--dos-clair), var(--dos-fonce));
+	box-shadow:
+		inset 0 0 0 var(--marge) $papier,
+		inset 0 0 0 calc(var(--marge) + 1px) rgba(0, 0, 0, .3);
+	color: var(--trait);
+}
+
+// Le bouton « mélange » : trois cartes en éventail, chacune dans un autre style.
+.vignette-mix {
+	position: relative;
+	display: block;
+	width: 100%;
+	aspect-ratio: 5 / 7;
+
+	.vignette {
+		--marge: 2px;
+		position: absolute;
+		top: 4%;
+		left: 0;
+		width: 68%;
+		border-radius: 4px;
+
+		&:nth-child(2) {
+			transform: translate(23%, 8%);
+		}
+
+		&:nth-child(3) {
+			transform: translate(46%, 16%);
+		}
+	}
+}

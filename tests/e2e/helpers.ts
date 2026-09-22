@@ -3,9 +3,8 @@ import assert from 'node:assert/strict';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { SCREEN, type Browser, type Page, type Point } from '../../src/kit/node/chrome.ts';
 
-/** Clés d'enregistrement (src/settings/store.ts) : réglages dans localStorage, paquet dans sessionStorage. */
+/** Clé d'enregistrement des réglages (src/settings/store.ts). Le paquet, lui, n'est pas enregistré. */
 export const SETTINGS_KEY = 'six-predictions:settings:v1';
-export const ETAT_KEY = 'six-predictions:etat:v1';
 
 export const TEST_TIMEOUT = { timeout: 60_000 };
 
@@ -35,7 +34,7 @@ export async function setPhoneLang(page: Page, languages: string): Promise<void>
 
 /**
  * Ouvre l'app à `url` dans un nouvel onglet, téléphone en français (PHONE_LANG) et `storage` déjà
- * enregistré (clé → valeur brute ; ETAT_KEY dans sessionStorage, le reste dans localStorage),
+ * enregistré (clé → valeur brute, dans localStorage),
  * attend ses `count` cartes, lance `run`, puis vérifie qu'aucune erreur JavaScript n'a eu lieu.
  */
 export async function openApp(browser: Browser, url: string, count: number, storage: Record<string, string>, run: (page: Page) => Promise<void>): Promise<void> {
@@ -43,7 +42,7 @@ export async function openApp(browser: Browser, url: string, count: number, stor
 	try {
 		await setPhoneLang(page, PHONE_LANG);
 		await page.goto(url);
-		const setup = Object.entries(storage).map(([key, value]) => `${key === ETAT_KEY ? 'sessionStorage' : 'localStorage'}.setItem(${JSON.stringify(key)}, ${JSON.stringify(value)});`).join('');
+		const setup = Object.entries(storage).map(([key, value]) => `localStorage.setItem(${JSON.stringify(key)}, ${JSON.stringify(value)});`).join('');
 		await page.evaluate(`localStorage.clear(); sessionStorage.clear(); ${setup}`);
 		await page.reload();
 		await page.waitFor(`document.querySelectorAll('#paquet .carte').length === ${count}`, 'cartes construites');
@@ -82,6 +81,11 @@ export async function expectDessus(page: Page, index: number, count: number, tim
 export async function toucher(page: Page, point: Point = CENTER): Promise<void> {
 	await page.tap(point);
 	await sleep(ANIM_MS);
+}
+
+/** Joue toute la routine : les `count` cartes retournées puis sorties, jusqu'à l'écran vide. */
+export async function viderLePaquet(page: Page, count: number): Promise<void> {
+	for (let i = 0; i < count * 2; i++) await toucher(page);
 }
 
 /** Deux touchers rapprochés, sous le délai du double toucher (logic/gestures.ts). */

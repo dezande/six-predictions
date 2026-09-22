@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-	Icône de l'app : trois cartes en éventail, celle du dessus retournée, une prédiction écrite
-	dessus. Dessinée ici une fois ; public/icons/icon-192.png et icon-512.png en sont rendus
-	(voir README, « Icônes »). Le dessin occupe le centre du carré : les coins sont perdus par
-	les masques d'icône d'Android (purpose « maskable »).
+	Icône de l'app : trois cartes en éventail sur le tapis vert, celle du dessus retournée, une
+	prédiction écrite dessus. Les deux du dessous montrent le dos Art déco (soleil levant et
+	cadre doré), comme dans l'app. Dessinée ici une fois ; public/icons/icon-192.png et
+	icon-512.png en sont rendus (voir README, « Icônes »). Le dessin occupe le centre du carré :
+	les coins sont perdus par les masques d'icône d'Android (purpose « maskable »).
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
 	<defs>
-		<linearGradient id="fond" x1="0" y1="0" x2="0" y2="1">
-			<stop offset="0" stop-color="#17161a"/>
-			<stop offset="1" stop-color="#08080a"/>
-		</linearGradient>
+		<radialGradient id="tapis" cx="50%" cy="38%" r="78%">
+			<stop offset="0" stop-color="#1a5130"/>
+			<stop offset="45%" stop-color="#10361f"/>
+			<stop offset="100%" stop-color="#071a0f"/>
+		</radialGradient>
 		<linearGradient id="dos" x1="0" y1="0" x2="1" y2="1">
-			<stop offset="0" stop-color="#9c2730"/>
+			<stop offset="0" stop-color="#93222a"/>
 			<stop offset="1" stop-color="#430e13"/>
 		</linearGradient>
 		<linearGradient id="papier" x1="0" y1="0" x2="0" y2="1">
@@ -21,29 +23,42 @@
 		</linearGradient>
 	</defs>
 
-	<rect width="512" height="512" fill="url(#fond)"/>
+	<rect width="512" height="512" fill="url(#tapis)"/>
 
-	<!-- Les deux cartes du dessous, faces en bas (le dos rouge : le noir se perdrait dans le fond). -->
-	<g transform="rotate(-15 256 300)">
-		<rect x="146" y="112" width="220" height="308" rx="26" fill="url(#dos)"/>
-		<rect x="158" y="124" width="196" height="284" rx="18" fill="none" stroke="#f3ecdd" stroke-width="9"/>
-		<rect x="172" y="138" width="168" height="256" rx="8" fill="none" stroke="#c8a15a" stroke-width="4"/>
+	<!-- L'éventail entier, un peu resserré : les masques d'icône d'Android rognent les bords. -->
+	<g transform="translate(256 256) scale(.9) translate(-256 -256)">
+
+	<!-- Les deux cartes du dessous, faces en bas : marge de papier, cadre et soleil levant dorés. -->
+	<g transform="rotate(-21 256 438)">
+		<rect x="146" y="112" width="220" height="308" rx="26" fill="#f3ecdd"/>
+		<rect x="157" y="123" width="198" height="286" rx="16" fill="url(#dos)"/>
+		<g fill="none" stroke="#e8ca88" stroke-width="4">
+			<rect x="168" y="134" width="176" height="264" rx="6"/>
+			<circle cx="256" cy="266" r="52"/>
+			<path d="M256 244l22 22-22 22-22-22Z"/>
+		</g>
 	</g>
-	<g transform="rotate(-7 256 300)">
-		<rect x="146" y="112" width="220" height="308" rx="26" fill="url(#dos)"/>
-		<rect x="158" y="124" width="196" height="284" rx="18" fill="none" stroke="#f3ecdd" stroke-width="9"/>
-		<rect x="172" y="138" width="168" height="256" rx="8" fill="none" stroke="#c8a15a" stroke-width="4"/>
+	<g transform="rotate(-10 256 438)">
+		<rect x="146" y="112" width="220" height="308" rx="26" fill="#f3ecdd"/>
+		<rect x="157" y="123" width="198" height="286" rx="16" fill="url(#dos)"/>
+		<g fill="none" stroke="#e8ca88" stroke-width="4">
+			<rect x="168" y="134" width="176" height="264" rx="6"/>
+			<circle cx="256" cy="266" r="52"/>
+			<path d="M256 244l22 22-22 22-22-22Z"/>
+		</g>
 	</g>
 
 	<!-- La carte du dessus, retournée : la prédiction, écrite à la main. -->
-	<g transform="rotate(6 256 300)">
+	<g transform="rotate(5 256 438)">
 		<rect x="146" y="112" width="220" height="308" rx="26" fill="url(#papier)" stroke="#1c2743" stroke-opacity=".2" stroke-width="3"/>
-		<!-- Un mot écrit d'un seul trait, en attachées : la prédiction. -->
+		<!-- Un mot écrit d'un seul trait, en attachées. -->
 		<path fill="none" stroke="#1c2743" stroke-linecap="round" stroke-linejoin="round" stroke-width="12"
 			d="M176 262c6-34 24-36 27-8 3 26-13 32-12 10 1-30 25-34 33-6 6 22-9 28-9 8 0-26 24-30 32-6 6 18-7 26-7 8 0-22 21-28 30-8 5 12 1 22-5 22"/>
 		<g fill="none" stroke="#c8a15a" stroke-linecap="round" stroke-width="9" stroke-opacity=".85">
 			<path d="M180 322h152"/>
 			<path d="M180 358h100"/>
 		</g>
+	</g>
+
 	</g>
 </svg>

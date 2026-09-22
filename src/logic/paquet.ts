@@ -12,6 +12,8 @@
  * Un toucher sur l'écran vide ne fait rien : il faut deux touchers rapprochés pour remettre le
  * paquet, afin qu'un doigt posé par mégarde à la fin de la routine ne fasse pas réapparaître
  * les prédictions devant le public.
+ *
+ * Rien de tout cela n'est enregistré : chaque ouverture de l'app repart d'un paquet neuf.
  */
 
 export interface Etat {
@@ -46,19 +48,11 @@ export const remettre = (): Etat => DEPART;
 /** Va à la carte `index`, dos visible : « aller à la carte » du menu. */
 export const allerA = (index: number, count: number): Etat => ({ index: clampIndex(index, count), retournee: false });
 
-/** Index de carte valide pour `count` cartes, à partir de n'importe quelle valeur (état relu sur l'appareil…). */
+/** Index de carte valide pour `count` cartes, à partir de n'importe quelle valeur. */
 export function clampIndex(raw: unknown, count: number): number {
 	if (count <= 0) return 0;
 	const index = typeof raw === 'number' && Number.isFinite(raw) ? Math.trunc(raw) : 0;
 	return Math.min(count, Math.max(0, index));
-}
-
-/** État valide à partir de n'importe quelle donnée (relue dans la session, abîmée…). */
-export function sanitizeEtat(raw: unknown, count: number): Etat {
-	const src: Partial<Record<keyof Etat, unknown>> = raw && typeof raw === 'object' ? raw : {};
-	const index = clampIndex(src.index, count);
-	// Une carte sortie n'est pas retournée : l'écran vide n'a pas de dessus.
-	return { index, retournee: index < count && src.retournee === true };
 }
 
 /** Texte du compteur du menu, ex. « 3 / 6 », et « 6 / 6 » quand tout est sorti. */

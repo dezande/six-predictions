@@ -13,7 +13,8 @@ import { onWakeChange, type WakeState } from '../kit/web/wake-lock.ts';
 import { carteLabel } from '../logic/cartes.ts';
 import { LANGS } from '../logic/i18n.ts';
 import { compteurLabel, estVide } from '../logic/paquet.ts';
-import { COULEURS, MOTIFS, type Settings } from '../logic/settings.ts';
+import { COULEURS, DESSINS, MOTIFS, TEINTES, dessinDeCarte, teinteDeCarte, type Couleur, type Motif, type Settings } from '../logic/settings.ts';
+import { buildDos } from '../stage/dos.ts';
 import { allerACarte, applyDisplaySettings, carteCount, etatCourant, remettrePaquet } from '../stage/paquet.ts';
 import { APP_VERSION } from '../version.ts';
 import { langue, onLangChange, setLangue } from './langue.ts';
@@ -46,7 +47,7 @@ function buildList(): void {
 }
 buildList();
 
-/* ---------- Choix en segments (langue, dos) ---------- */
+/* ---------- Choix en segments (langue) ---------- */
 
 /**
  * Boutons d'un réglage à plusieurs valeurs. `libelle` donne le texte d'une valeur dans la langue
@@ -65,13 +66,80 @@ function buildSegment(selector: string, valeurs: readonly string[], libelle: (va
 	}
 }
 
-function buildSegments(): void {
-	// Les langues se nomment elles-mêmes : « FR » et « EN », quelle que soit la langue affichée.
+// Les langues se nomment elles-mêmes : « FR » et « EN », quelle que soit la langue affichée.
+const buildLangues = (): void =>
 	buildSegment('#langue-seg', LANGS, (valeur) => valeur.toUpperCase(), (valeur) => setLangue(valeur as (typeof LANGS)[number]));
-	buildSegment('#motif-seg', MOTIFS, (valeur) => ui(`motif.${valeur}` as CleInterface, langue()), (valeur) => update({ motif: valeur as Settings['motif'] }));
-	buildSegment('#couleur-seg', COULEURS, (valeur) => ui(`couleur.${valeur}` as CleInterface, langue()), (valeur) => update({ couleur: valeur as Settings['couleur'] }));
+buildLangues();
+
+/* ---------- Choix du dos : on regarde les cartes, on ne lit pas leurs noms ---------- */
+
+/**
+ * Une petite carte, face cachée, dans le dessin et la couleur demandés : c'est ce qu'on regarde
+ * pour choisir, plutôt qu'un nom de style. Le nom reste en étiquette pour les lecteurs d'écran.
+ */
+function vignette(dessin: Parameters<typeof buildDos>[0], teinte: string): HTMLElement {
+	const dos = document.createElement('span');
+	dos.className = 'vignette';
+	dos.dataset.couleur = teinte;
+	dos.appendChild(buildDos(dessin));
+	return dos;
 }
-buildSegments();
+
+/**
+ * Le bouton « mélange » : trois petites cartes en éventail, chacune dans un autre style — l'image
+ * même de ce que fait le réglage.
+ */
+function vignetteMix(apercus: [Parameters<typeof buildDos>[0], string][]): HTMLElement {
+	const pile = document.createElement('span');
+	pile.className = 'vignette-mix';
+	for (const [dessin, teinte] of apercus) pile.appendChild(vignette(dessin, teinte));
+	return pile;
+}
+
+/**
+ * Une rangée de boutons illustrés. Chaque bouton porte son aperçu et le nom de la valeur en
+ * étiquette. Les aperçus du dos sont dessinés dans la couleur en cours, et ceux de la couleur
+ * dans le dos en cours : le menu montre donc toujours la carte telle qu'elle sera.
+ */
+function buildChoix(selector: string, valeurs: readonly string[], cle: string, apercu: (valeur: string) => HTMLElement, onPick: (valeur: string) => void): void {
+	const lang = langue();
+	const boite = $(selector);
+	boite.replaceChildren();
+	for (const valeur of valeurs) {
+		const button = boite.appendChild(document.createElement('button'));
+		button.type = 'button';
+		button.setAttribute('role', 'radio');
+		button.dataset.valeur = valeur;
+		button.setAttribute('aria-label', ui(`${cle}.${valeur}` as CleInterface, lang));
+		button.appendChild(apercu(valeur));
+		button.addEventListener('click', () => onPick(valeur));
+	}
+}
+
+function buildDosChoix(): void {
+	// Un « mix » n'a pas de couleur ni de dessin à lui : les aperçus prennent alors le premier.
+	const teinte = settings.couleur === 'mix' ? TEINTES[0] : settings.couleur;
+	const dessin = settings.motif === 'mix' ? DESSINS[0] : settings.motif;
+	buildChoix(
+		'#motif-choix',
+		MOTIFS,
+		'motif',
+		(valeur) => (valeur === 'mix'
+			? vignetteMix([0, 1, 2].map((i) => [dessinDeCarte('mix', i), teinte]) as [Parameters<typeof buildDos>[0], string][])
+			: vignette(valeur as Parameters<typeof buildDos>[0], teinte)),
+		(valeur) => update({ motif: valeur as Motif }),
+	);
+	buildChoix(
+		'#couleur-choix',
+		COULEURS,
+		'couleur',
+		(valeur) => (valeur === 'mix'
+			? vignetteMix([0, 1, 2].map((i) => [dessin, teinteDeCarte('mix', i)]) as [Parameters<typeof buildDos>[0], string][])
+			: vignette(dessin, valeur)),
+		(valeur) => update({ couleur: valeur as Couleur }),
+	);
+}
+buildDosChoix();
 
 /* ---------- Affichage du menu ---------- */
 
@@ -81,10 +149,10 @@ function refresh(): void {
 	for (const button of $('#langue-seg').querySelectorAll<HTMLButtonElement>('button')) {
 		button.setAttribute('aria-checked', String(button.dataset.valeur === settings.langue));
 	}
-	for (const button of $('#motif-seg').querySelectorAll<HTMLButtonElement>('button')) {
+	for (const button of $('#motif-choix').querySelectorAll<HTMLButtonElement>('button')) {
 		button.setAttribute('aria-checked', String(button.dataset.valeur === settings.motif));
 	}
-	for (const button of $('#couleur-seg').querySelectorAll<HTMLButtonElement>('button')) {
+	for (const button of $('#couleur-choix').querySelectorAll<HTMLButtonElement>('button')) {
 		button.setAttribute('aria-checked', String(button.dataset.valeur === settings.couleur));
 	}
 	const etat = etatCourant();
@@ -179,6 +247,8 @@ export function closeMenu(): void {
 function save(next: Settings | null): void {
 	storeSettings(next);
 	applyDisplaySettings();
+	// Les aperçus du menu montrent la carte telle qu'elle est : ils suivent les deux réglages.
+	buildDosChoix();
 	refresh();
 }
 
@@ -191,7 +261,8 @@ $<HTMLInputElement>('#show-hold-ring').addEventListener('change', (event) => {
 // Langue changée depuis le menu : le menu porte du texte construit ici.
 onLangChange(() => {
 	buildList();
-	buildSegments();
+	buildLangues();
+	buildDosChoix();
 	showWake(lastWake);
 	if (isMenuOpen()) refresh();
 });

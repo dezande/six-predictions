@@ -52,15 +52,38 @@
 	 * visible au milieu de la carte, sur l'axe même du retournement.
 	 */
 
-	/* Couleurs du dos, posées par le menu (data-couleur, logic/settings.ts). */
+}
+
+/*
+ * Les quatre couleurs de dos, pour les cartes de la scène comme pour les vignettes du menu
+ * (styles/_menu.scss). Elles sont posées sur chaque carte et non sur le paquet : le réglage
+ * « mix » en donne une différente à chaque carte (stage/paquet.ts, logic/settings.ts).
+ *   --dos-clair / --dos-fonce  le fond, du haut vers le bas ;
+ *   --trait                    le dessin du dos (stage/dos.ts), doré sur fond sombre, encre sur blanc.
+ */
+.carte,
+.vignette {
 	--dos-clair: #23242b;
 	--dos-fonce: #0e0f13;
-	--or: #c8a15a;
+	--trait: #c8a15a;
 
 	&[data-couleur="rouge"] {
-		--dos-clair: #8e2028;
+		--dos-clair: #93222a;
 		--dos-fonce: #430e13;
-		--or: #e3c37f;
+		--trait: #e8ca88;
+	}
+
+	&[data-couleur="bleu"] {
+		--dos-clair: #23508f;
+		--dos-fonce: #0b1c38;
+		--trait: #ddc88c;
+	}
+
+	// Un dos clair : le dessin passe à l'encre, sans quoi l'or disparaîtrait.
+	&[data-couleur="blanc"] {
+		--dos-clair: #f4eee2;
+		--dos-fonce: #d9d0bc;
+		--trait: #2f3442;
 	}
 }
 
@@ -145,7 +168,7 @@
 		0 1px 2px rgba(0, 0, 0, .5),
 		0 18px 36px rgba(0, 0, 0, .45);
 	// Le motif est dessiné en SVG (stage/dos.ts) : il prend cette couleur.
-	color: var(--or);
+	color: var(--trait);
 }
 
 /**
@@ -154,7 +177,7 @@
  */
 .dos-motif {
 	position: absolute;
-	inset: calc(var(--marge) + 1px);
+	inset: calc(var(--marge, 3px) + 1px);
 	display: block;
 	width: auto;
 	height: auto;

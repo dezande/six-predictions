@@ -15,7 +15,7 @@
  *     paquet.ts    construction des cartes, retournement, sortie du cadre, ajustement du texte
  *     input.ts     gestes et clavier
  *   settings/    menu et réglages
- *     store.ts     réglages enregistrés sur l'appareil, paquet gardé le temps de la session
+ *     store.ts     réglages enregistrés sur l'appareil (le paquet, lui, repart neuf à chaque ouverture)
  *     langue.ts    français ou anglais : textes de l'interface, changement depuis le menu
  *     panel.ts     menu : aller à une carte, remettre le paquet, réglages
  *   kit/         code commun des accessoires de scène (sous-module kit-scene, voir son README) :

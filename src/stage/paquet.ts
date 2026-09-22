@@ -17,10 +17,10 @@ import { ui } from '../content/interface.ts';
 import { CARTES } from '../content/cartes.ts';
 import { t } from '../logic/i18n.ts';
 import { crans, nouveauSemis, type Cran } from '../logic/etalement.ts';
-import { allerA, apresToucher, compteurLabel, DEPART, estVide, remettre, sanitizeEtat, type Etat } from '../logic/paquet.ts';
-import type { Motif } from '../logic/settings.ts';
+import { allerA, apresToucher, compteurLabel, DEPART, estVide, remettre, type Etat } from '../logic/paquet.ts';
+import { dessinDeCarte, teinteDeCarte, type Couleur, type Motif } from '../logic/settings.ts';
 import { langue, onLangChange } from '../settings/langue.ts';
-import { loadEtat, loadSemis, settings, storeEtat, storeSemis } from '../settings/store.ts';
+import { settings } from '../settings/store.ts';
 import { $ } from '../kit/web/dom.ts';
 // Rotation calculée avant le premier ajustement du texte.
 import '../kit/web/orientation.ts';
@@ -30,20 +30,22 @@ const paquetEl = $('#paquet');
 const annonceEl = $('#annonce');
 
 export const carteCount = CARTES.length;
-let etat: Etat = sanitizeEtat(loadEtat(), carteCount);
 
 /*
- * L'étalement du paquet : les écarts, tirés au sort, d'un rang de la pile au suivant. Le semis est
- * gardé le temps de la session, si bien qu'un rechargement de la page retrouve le paquet tel quel ;
- * remettre le paquet en tire un nouveau, et les cartes retombent autrement.
+ * Le paquet en cours. Rien n'en est enregistré : l'app s'ouvre toujours sur les six cartes, faces
+ * en bas, prête à jouer — même si la routine précédente a été laissée en plan.
  */
-let semis = loadSemis() ?? nouveauSemis();
-let etalement: Cran[] = crans(semis, carteCount);
+let etat: Etat = DEPART;
+
+/*
+ * L'étalement du paquet : les écarts, tirés au sort, d'une carte à la suivante. Il est neuf à
+ * chaque ouverture comme à chaque remise du paquet, si bien que deux représentations ne commencent
+ * jamais sur le même étalement.
+ */
+let etalement: Cran[] = crans(nouveauSemis(), carteCount);
 
 function nouvelEtalement(): void {
-	semis = nouveauSemis();
-	storeSemis(semis);
-	etalement = crans(semis, carteCount);
+	etalement = crans(nouveauSemis(), carteCount);
 	placer();
 }
 
@@ -64,7 +66,7 @@ function buildCarte(index: number): HTMLElement {
 	const dos = pivot.appendChild(document.createElement('div'));
 	dos.className = 'carte-face dos';
 	dos.setAttribute('aria-label', ui('carte.dos', lang));
-	dos.appendChild(buildDos(settings.motif));
+	dos.appendChild(buildDos(dessinDeCarte(settings.motif, index)));
 
 	// L'avant : la prédiction, dans un corps dont le texte s'ajuste à la carte.
 	const avant = pivot.appendChild(document.createElement('div'));
@@ -110,7 +112,10 @@ function buildAll(): void {
 	paquetEl.replaceChildren(...carteEls);
 	fitted.clear();
 	placer();
-	render();
+	// Les cartes sont neuves : dessin et couleur des dos sont à reposer.
+	motifPose = null;
+	couleurPosee = null;
+	applyDisplaySettings();
 }
 
 // Langue changée depuis le menu : tout le texte des cartes est à refaire.
@@ -215,7 +220,6 @@ let prochainToucherA = 0;
 function setEtat(next: Etat): void {
 	if (next.index === etat.index && next.retournee === etat.retournee) return;
 	etat = next;
-	storeEtat(etat);
 	render();
 }
 
@@ -251,7 +255,6 @@ export function remettrePaquet(): void {
 	sansAnimation(() => {
 		nouvelEtalement();
 		etat = remettre();
-		storeEtat(etat);
 		render();
 	});
 }
@@ -268,13 +271,25 @@ export const etatCourant = (): Etat => etat;
 
 /** Motif dessiné sur les dos actuellement en place, pour ne les refaire qu'au vrai changement. */
 let motifPose: Motif | null = null;
+/** Couleur posée sur les dos, de même. */
+let couleurPosee: Couleur | null = null;
 
-/** Applique les réglages en cours : dessin et couleur du dos des cartes. */
+/**
+ * Applique les réglages en cours : dessin et couleur du dos des cartes. Avec « mix », chaque carte
+ * a le sien (logic/settings.ts) — c'est pourquoi le dessin se refait carte par carte.
+ */
 export function applyDisplaySettings(): void {
-	paquetEl.dataset.couleur = settings.couleur;
+	if (couleurPosee !== settings.couleur) {
+		couleurPosee = settings.couleur;
+		carteEls.forEach((el, i) => {
+			el.dataset.couleur = teinteDeCarte(settings.couleur, i);
+		});
+	}
 	if (motifPose !== settings.motif) {
 		motifPose = settings.motif;
-		for (const el of carteEls) el.querySelector('.dos')!.replaceChildren(buildDos(settings.motif));
+		carteEls.forEach((el, i) => {
+			el.querySelector('.dos')!.replaceChildren(buildDos(dessinDeCarte(settings.motif, i)));
+		});
 	}
 	render();
 }
@@ -282,10 +297,4 @@ export function applyDisplaySettings(): void {
 // Sans transition au démarrage : le paquet repris apparaît directement à sa place.
 paquetEl.classList.add('no-anim');
 buildAll();
-applyDisplaySettings();
-// Un paquet neuf est l'état de départ : rien à reprendre, mais l'écrire tout de suite — l'étalement
-// compris — évite qu'un rechargement juste après l'ouverture reparte d'une session vide, et donc
-// redistribue les cartes.
-if (etat.index === DEPART.index && !etat.retournee) storeEtat(etat);
-storeSemis(semis);
 requestAnimationFrame(() => requestAnimationFrame(() => paquetEl.classList.remove('no-anim')));

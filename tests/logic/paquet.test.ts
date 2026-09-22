@@ -1,7 +1,7 @@
 // L'état du paquet : ce que chaque toucher en fait, et la reprise d'un état abîmé.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allerA, apresToucher, clampIndex, compteurLabel, DEPART, estVide, remettre, restantes, sanitizeEtat } from '../../src/logic/paquet.ts';
+import { allerA, apresToucher, clampIndex, compteurLabel, DEPART, estVide, remettre, restantes } from '../../src/logic/paquet.ts';
 
 const COUNT = 6;
 
@@ -53,14 +53,6 @@ test('clampIndex : toute valeur relue donne un index valide', () => {
 	assert.equal(clampIndex(2.7, COUNT), 2);
 	for (const raw of [null, undefined, '3', NaN, Infinity, {}]) assert.equal(clampIndex(raw, COUNT), 0);
 	assert.equal(clampIndex(3, 0), 0);
-});
-
-test('sanitizeEtat : un état abîmé redonne un paquet jouable', () => {
-	assert.deepEqual(sanitizeEtat({ index: 2, retournee: true }, COUNT), { index: 2, retournee: true });
-	assert.deepEqual(sanitizeEtat({ index: 2, retournee: 'oui' }, COUNT), { index: 2, retournee: false });
-	for (const raw of [null, undefined, 'x', 42, []]) assert.deepEqual(sanitizeEtat(raw, COUNT), DEPART);
-	// Une carte sortie n'est pas retournée : l'écran vide n'a pas de dessus.
-	assert.deepEqual(sanitizeEtat({ index: 99, retournee: true }, COUNT), { index: COUNT, retournee: false });
 });
 
 test('compteurLabel', () => {

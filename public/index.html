@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' data:; connect-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'">
-	<meta name="theme-color" content="#0b0b0d">
+	<meta name="theme-color" content="#071a0f">
 	<meta name="color-scheme" content="dark">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="mobile-web-app-capable" content="yes">
@@ -60,14 +60,16 @@
 					<div class="seg" id="langue-seg" role="radiogroup" data-texte-label="menu.langue"></div>
 				</div>
 
+				<!-- Les dos et les couleurs se choisissent en les regardant : chaque bouton montre
+				     la carte telle qu'elle sera, pas le nom du style (settings/panel.ts). -->
 				<div class="card">
 					<div class="row-label" data-texte="menu.motif"></div>
-					<div class="seg" id="motif-seg" role="radiogroup" data-texte-label="menu.motif"></div>
+					<div class="vignettes" id="motif-choix" role="radiogroup" data-texte-label="menu.motif"></div>
 				</div>
 
 				<div class="card">
 					<div class="row-label" data-texte="menu.couleur"></div>
-					<div class="seg" id="couleur-seg" role="radiogroup" data-texte-label="menu.couleur"></div>
+					<div class="vignettes couleurs" id="couleur-choix" role="radiogroup" data-texte-label="menu.couleur"></div>
 				</div>
 
 				<div class="card options">

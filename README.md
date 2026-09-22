@@ -20,7 +20,7 @@ Tout le texte est dans **[`src/content/cartes.ts`](src/content/cartes.ts)** : un
 | `texte` | **Obligatoire.** La prédiction, écrite à la main sur la carte |
 | `entete` | Une petite ligne au-dessus, plus discrète : une date, un nom, un numéro. Facultatif, et aucune des six cartes actuelles ne s'en sert |
 
-**Deux langues.** Chaque champ s'écrit soit une seule fois (le même dans les deux langues : un nombre, un nom propre, une interjection), soit une fois par langue : `{ fr: '…', en: '…' }`. Une traduction oubliée ou vide fait échouer `npm test`, comme un champ mal orthographié. Le texte du menu, lui, est dans [`src/content/interface.ts`](src/content/interface.ts).
+**Deux langues.** Chaque champ s'écrit soit une seule fois (le même dans les deux langues : un nombre, un nom propre), soit une fois par langue : `{ fr: '…', en: '…' }`. Les deux listes ne se traduisent pas mot à mot : chacune est une suite de réactions naturelle dans sa langue — `NON! RIEN! NON PLUS!` d'un côté, `NO! NEITHER! NOTHING!` de l'autre. Ce qui compte est l'enchaînement, pas la correspondance terme à terme. Une traduction oubliée ou vide fait échouer `npm test`, comme un champ mal orthographié. Le texte du menu, lui, est dans [`src/content/interface.ts`](src/content/interface.ts).
 
 ### Comment la prédiction est mise en page
 

@@ -10,6 +10,7 @@ Les numéros suivent [semver](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORR
 
 | Version | Commits | Date | En une phrase |
 | --- | --- | --- | --- |
+| [0.6.1] | 7 | 2026-09-23 | Les prédictions en français |
 | [0.6.0] | 6 | 2026-09-23 | Les vraies prédictions, qui remplissent la carte et partent en diagonale |
 | [0.5.0] | 5 | 2026-09-22 | Tapis vert, six dos et quatre couleurs choisis à l'œil, paquet neuf à chaque ouverture |
 | [0.4.0] | 4 | 2026-09-22 | Les cartes restantes ne remontent plus quand celle du dessus part |
@@ -18,6 +19,13 @@ Les numéros suivent [semver](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORR
 | [0.1.0] | 1 | 2026-09-22 | Première version : six cartes à prédictions, PWA hors-ligne |
 
 ---
+
+## [0.6.1] — 2026-09-23
+
+7 commits
+
+- **Les six prédictions en français** : `NON!`, `RIEN!`, `NON PLUS!`, `OUPS!`, `OUI C'EST ELLE!` et `AUCUNE`. Elles n'étaient jusqu'ici qu'en anglais, affichées telles quelles dans les deux langues.
+- Les deux listes ne se traduisent pas mot à mot : chacune est une suite de réactions naturelle dans sa langue. `NON PLUS!` part en diagonale là où l'anglais met `NOTHING!`, et `AUCUNE` aussi — la mise en page suit le texte, pas la langue.
 
 ## [0.6.0] — 2026-09-23
 
@@ -126,6 +134,7 @@ gh release create v0.2.0 --title "v0.2.0 — Titre" --notes-file notes.md
 
 
 
+[0.6.1]: https://github.com/dezande/six-predictions/releases/tag/v0.6.1
 [0.6.0]: https://github.com/dezande/six-predictions/releases/tag/v0.6.0
 [0.5.0]: https://github.com/dezande/six-predictions/releases/tag/v0.5.0
 [0.4.0]: https://github.com/dezande/six-predictions/releases/tag/v0.4.0

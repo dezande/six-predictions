@@ -8,7 +8,10 @@
  *   entete  une petite ligne au-dessus, plus discrète : une date, un nom, un numéro (facultatif).
  *
  * Chaque texte s'écrit dans les deux langues, `{ fr: '…', en: '…' }` — ou une seule fois, en
- * chaîne, quand il est identique dans les deux, ce qui est le cas de ces six-là.
+ * chaîne, quand il est identique dans les deux.
+ *
+ * Les deux listes ne se traduisent pas mot à mot : chacune est une suite de réactions naturelle
+ * dans sa langue. Ce qui compte est l'enchaînement, pas la correspondance terme à terme.
  *
  * La prédiction **remplit la carte** : sa taille est calculée pour occuper toute la place, aussi
  * grande que possible. Un mot court frappe donc plein cadre, et un texte long rétrécit juste ce
@@ -21,11 +24,11 @@
 import type { Carte } from '../logic/cartes.ts';
 
 export const CARTES: readonly Carte[] = [
-	{ texte: 'NO!' },
-	{ texte: 'NEITHER!' },
-	{ texte: 'NOTHING!' },
-	{ texte: 'UYYYY!' },
-	// Un mot par ligne : trois retours à la ligne plutôt qu'une phrase qui s'étale.
-	{ texte: 'THIS\nONE\nYES!' },
-	{ texte: 'NONE' },
+	{ texte: { fr: 'NON!', en: 'NO!' } },
+	{ texte: { fr: 'RIEN!', en: 'NEITHER!' } },
+	{ texte: { fr: 'NON PLUS!', en: 'NOTHING!' } },
+	{ texte: { fr: 'OUPS!', en: 'UYYYY!' } },
+	// Un mot par ligne : des retours à la ligne plutôt qu'une phrase qui s'étale.
+	{ texte: { fr: 'OUI\nC’EST\nELLE!', en: 'THIS\nONE\nYES!' } },
+	{ texte: { fr: 'AUCUNE', en: 'NONE' } },
 ];

@@ -204,8 +204,6 @@ test('menu : aller à une carte, puis remettre le paquet', TEST_TIMEOUT, async (
 	});
 });
 
-// Les six prédictions actuelles sont les mêmes dans les deux langues (des interjections) : c'est
-// l'interface qui porte la vérification du changement de langue.
 test('menu : la langue change les prédictions et l’interface, et reste enregistrée', TEST_TIMEOUT, async () => {
 	await withApp({}, async (page) => {
 		await toucher(page);

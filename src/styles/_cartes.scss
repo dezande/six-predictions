@@ -1,0 +1,183 @@
+@use "tokens" as *;
+@use "mixins" as *;
+
+/*
+ * Les six cartes, empilées au centre de la scène.
+ *
+ * Trois transformations se superposent, chacune sur son élément pour ne pas se gêner :
+ *   .carte        place la carte dans la pile (--profondeur), puis la fait sortir du cadre ;
+ *   .carte-pivot  la retourne (rotateY) ;
+ *   .carte-face   le dos et l'avant, dos à dos (backface-visibility).
+ */
+
+#paquet {
+	// Une carte à jouer : 2,5 × 3,5 pouces. La carte prend la plus grande taille qui tienne dans
+	// l'écran, en largeur comme en hauteur, et sa hauteur commande sa largeur (le rapport est fixe).
+	--ratio: .714;
+	--carte-h: min(
+		calc(var(--app-w) * .78 / var(--ratio)),
+		calc((var(--app-h) - var(--safe-t) - var(--safe-b) - 32px) * .92),
+		560px
+	);
+	--carte-w: calc(var(--carte-h) * var(--ratio));
+	--rayon: clamp(12px, calc(var(--carte-w) * .055), 26px);
+	// Marge de papier du bord des dos. En longueur absolue : un pourcentage n'est pas admis
+	// dans l'étalement d'une ombre, et rendrait toute la déclaration invalide.
+	--marge: clamp(7px, calc(var(--carte-w) * .038), 16px);
+	// Couleurs du dos, remplacées par le réglage « Dos des cartes » (data-dos, logic/settings.ts).
+	--dos-clair: #2f5fa8;
+	--dos-fonce: #12233f;
+	--dos-trait: rgba(255, 255, 255, .16);
+	position: relative;
+	width: var(--carte-w);
+	height: var(--carte-h);
+	transform-style: preserve-3d;
+
+	&[data-dos="rouge"] {
+		--dos-clair: #a8323a;
+		--dos-fonce: #451117;
+	}
+
+	&[data-dos="encre"] {
+		--dos-clair: #2a2d36;
+		--dos-fonce: #101218;
+		--dos-trait: rgba(200, 161, 90, .18);
+	}
+}
+
+.carte {
+	// Profondeur visible : au-delà de la troisième carte, la pile n'épaissit plus.
+	--p: min(var(--profondeur), 3);
+	@include cover;
+	z-index: calc(100 - var(--profondeur));
+	transform-style: preserve-3d;
+	// Les cartes du dessous sont légèrement décalées et inclinées : un vrai paquet posé à plat.
+	transform:
+		translate(calc(var(--p) * 3px), calc(var(--p) * 7px))
+		rotate(calc(var(--p) * -1.1deg))
+		scale(calc(1 - var(--p) * .018));
+	transition: transform .5s cubic-bezier(.22, .61, .36, 1), opacity .4s ease;
+}
+
+/*
+ * Sortie du cadre : la carte part vers le haut, en tournant, et disparaît.
+ * Elle passe par-dessus tout le paquet le temps de son vol.
+ */
+.carte.sortie {
+	z-index: 200;
+	opacity: 0;
+	transform: translate(-26%, -155%) rotate(-17deg) scale(.94);
+	transition: transform .6s cubic-bezier(.36, 0, .66, -.12), opacity .45s ease .22s;
+}
+
+.carte-pivot {
+	@include cover;
+	transform-style: preserve-3d;
+	transition: transform .62s cubic-bezier(.4, .02, .2, 1);
+}
+
+.carte.retournee .carte-pivot {
+	transform: rotateY(180deg);
+}
+
+.carte-face {
+	@include cover;
+	@include backface-hidden;
+	border-radius: var(--rayon);
+	overflow: hidden;
+	box-shadow:
+		0 1px 2px rgba(0, 0, 0, .5),
+		0 18px 36px rgba(0, 0, 0, .45);
+}
+
+/* ---------- Le dos ---------- */
+
+.dos {
+	// Deux trames croisées à 45° sur un fond dégradé : le quadrillage classique d'un dos de carte.
+	background:
+		repeating-linear-gradient(45deg, transparent 0 7px, var(--dos-trait) 7px 8px),
+		repeating-linear-gradient(-45deg, transparent 0 7px, var(--dos-trait) 7px 8px),
+		linear-gradient(155deg, var(--dos-clair), var(--dos-fonce));
+	// La marge de papier du bord, puis un filet sombre juste à l'intérieur : les ombres se
+	// peignent dans l'ordre, la première par-dessus les suivantes.
+	box-shadow:
+		inset 0 0 0 var(--marge) $papier,
+		inset 0 0 0 calc(var(--marge) + 1px) rgba(0, 0, 0, .3),
+		0 1px 2px rgba(0, 0, 0, .5),
+		0 18px 36px rgba(0, 0, 0, .45);
+}
+
+// L'emblème au centre du dos : un ovale doré, vide.
+.dos-motif {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 42%;
+	height: 30%;
+	transform: translate(-50%, -50%);
+	border: 2px solid rgba(200, 161, 90, .55);
+	border-radius: 50%;
+	box-shadow: inset 0 0 0 4px rgba(255, 255, 255, .06);
+
+	&::before {
+		content: "";
+		position: absolute;
+		inset: 14%;
+		border: 1px solid rgba(200, 161, 90, .35);
+		border-radius: 50%;
+	}
+}
+
+/* ---------- L'avant : la prédiction ---------- */
+
+.avant {
+	display: grid;
+	place-items: center;
+	padding: clamp(16px, 9%, 40px);
+	transform: rotateY(180deg);
+	// Papier crème, un peu plus sombre vers les bords, avec un liseré d'encre.
+	background:
+		radial-gradient(120% 90% at 50% 30%, #fbf6ea, $papier 58%, $papier-ombre 140%);
+	box-shadow:
+		inset 0 0 0 1px rgba(28, 39, 67, .16),
+		0 1px 2px rgba(0, 0, 0, .5),
+		0 18px 36px rgba(0, 0, 0, .45);
+	color: $encre;
+	text-align: center;
+}
+
+.carte-corps {
+	width: 100%;
+	// --fit : échelle calculée par stage/paquet.ts pour que la prédiction tienne dans la carte.
+	--fit: 1;
+}
+
+.entete {
+	margin: 0 0 calc(var(--fit) * 18px);
+	font: 600 calc(var(--fit) * 12px) / 1.2 $sans;
+	letter-spacing: .18em;
+	text-transform: uppercase;
+	color: rgba(28, 39, 67, .5);
+}
+
+// La prédiction elle-même, écrite à la main.
+.prediction {
+	margin: 0;
+	font-family: $manuscrit;
+	font-size: calc(var(--fit) * 38px);
+	font-weight: 600;
+	line-height: 1.22;
+	// L'encre d'un stylo : un bleu-noir jamais tout à fait uniforme.
+	color: $encre;
+	text-shadow: 0 1px 0 rgba(255, 255, 255, .5);
+	overflow-wrap: break-word;
+	hyphens: none;
+}
+
+// Au démarrage, le paquet repris apparaît directement à sa place, sans vol ni retournement.
+#paquet.no-anim {
+	.carte,
+	.carte-pivot {
+		transition: none;
+	}
+}

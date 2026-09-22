@@ -14,6 +14,7 @@ import { sanitizeSettings, type Settings } from '../logic/settings.ts';
 
 const SETTINGS_KEY = 'six-predictions:settings:v1';
 const ETAT_KEY = 'six-predictions:etat:v1';
+const SEMIS_KEY = 'six-predictions:etalement:v1';
 
 /**
  * Langue de départ, tant qu'aucune n'a été choisie : celle du téléphone (anglais s'il est en
@@ -56,6 +57,32 @@ export function loadEtat(): unknown {
 export function storeEtat(etat: unknown): void {
 	try {
 		sessionStorage.setItem(ETAT_KEY, JSON.stringify(etat));
+	} catch {
+		// Mode privé, stockage plein…
+	}
+}
+
+/*
+ * Le semis de l'étalement (logic/etalement.ts) suit l'état du paquet : gardé le temps de la
+ * session, pour qu'un rechargement de la page ne redistribue pas les cartes en pleine routine.
+ * Remettre le paquet en tire un nouveau.
+ */
+
+/** Semis de l'étalement en cours, ou null s'il n'y en a pas encore (ou qu'il est illisible). */
+export function loadSemis(): number | null {
+	try {
+		const raw = sessionStorage.getItem(SEMIS_KEY);
+		const semis = raw === null ? null : Number(JSON.parse(raw));
+		return typeof semis === 'number' && Number.isFinite(semis) ? semis : null;
+	} catch {
+		return null;
+	}
+}
+
+/** Retient le semis de l'étalement en cours. */
+export function storeSemis(semis: number): void {
+	try {
+		sessionStorage.setItem(SEMIS_KEY, JSON.stringify(semis));
 	} catch {
 		// Mode privé, stockage plein…
 	}

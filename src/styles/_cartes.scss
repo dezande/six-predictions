@@ -11,20 +11,31 @@
  */
 
 #paquet {
-	// Décalage vertical d'une carte à la suivante dans la pile. Calculé sur la hauteur de l'écran
-	// et non sur celle de la carte : la taille de la carte dépend de lui, l'inverse tournerait en rond.
-	--etalement: clamp(12px, calc(var(--app-h) * .026), 28px);
-	// Hauteur occupée par l'étalement, sous la carte du dessus (cinq cartes en dessous).
-	--pile: calc(var(--etalement) * 5);
-	// Une carte à jouer : 2,5 × 3,5 pouces. La carte prend la plus grande taille qui tienne dans
-	// l'écran, l'étalement compris, et sa hauteur commande sa largeur (le rapport est fixe).
+	/*
+	 * La taille de la carte, puis l'étalement du paquet, se calculent dans cet ordre à partir de
+	 * la place réellement disponible — l'étalement dépend de la carte, jamais l'inverse.
+	 *
+	 *   1. la carte prend la plus grande taille qui tienne en largeur, sans dépasser 58 % de la
+	 *      hauteur libre (le rapport 2,5 × 3,5 pouces commande sa largeur) ;
+	 *   2. tout ce qui reste en dessous se partage entre les cinq cartes du fond, sans qu'une
+	 *      carte découvre plus que le huitième de sa voisine.
+	 *
+	 * Les deux plafonds se répondent : 58 % pour la carte et 12 % de la carte pour chacun des cinq
+	 * crans font au plus 93 % de la hauteur libre. Le paquet remplit donc l'écran sans jamais en
+	 * sortir ni le toucher, qu'il soit haut, court, ou pivoté avec le téléphone.
+	 */
 	--ratio: .714;
+	--dispo-h: calc(var(--app-h) - var(--safe-t) - var(--safe-b) - 32px);
 	--carte-h: min(
-		calc(var(--app-w) * .78 / var(--ratio)),
-		calc((var(--app-h) - var(--safe-t) - var(--safe-b) - 32px - var(--pile)) * .95),
-		520px
+		calc(var(--app-w) * .76 / var(--ratio)),
+		calc(var(--dispo-h) * .58),
+		500px
 	);
 	--carte-w: calc(var(--carte-h) * var(--ratio));
+	// Décalage vertical d'une carte à la suivante.
+	--etalement: max(12px, min(calc((var(--dispo-h) - var(--carte-h)) / 5), calc(var(--carte-h) * .12)));
+	// Hauteur occupée par l'étalement, sous la carte du dessus (cinq cartes en dessous).
+	--pile: calc(var(--etalement) * 5);
 	--rayon: clamp(12px, calc(var(--carte-w) * .055), 26px);
 	// Marge de papier du bord des dos. En longueur absolue : un pourcentage n'est pas admis
 	// dans l'étalement d'une ombre, et rendrait toute la déclaration invalide.
@@ -54,18 +65,26 @@
 }
 
 .carte {
-	// Profondeur visible : les cinq cartes du dessous s'étalent, chacune un cran plus bas.
-	--p: min(var(--profondeur), 5);
+	/*
+	 * Où la carte est posée dans la pile. Les trois valeurs sont écrites par stage/paquet.ts,
+	 * d'après l'étalement tiré au sort (logic/etalement.ts) :
+	 *   --dy   descente, en nombre de crans (0 pour la carte du dessus) ;
+	 *   --dx   décalage latéral, en pixels ;
+	 *   --rot  inclinaison, en degrés.
+	 */
+	--dy: 0;
+	--dx: 0;
+	--rot: 0;
 	@include cover;
 	z-index: calc(100 - var(--profondeur));
 	// La carte tourne autour de son propre centre : la perspective est posée ici, et nulle part
 	// plus haut, pour qu'aucune carte ne partage d'espace 3D avec une autre.
 	perspective: 1200px;
-	// Les cartes du dessous descendent et s'inclinent à peine : un paquet étalé en biseau.
+	// Les cartes du dessous descendent, s'inclinent et rapetissent : un paquet étalé à la main.
 	transform:
-		translate(calc(var(--p) * 1px), calc(var(--p) * var(--etalement)))
-		rotate(calc(var(--p) * -.7deg))
-		scale(calc(1 - var(--p) * .012));
+		translate(calc(var(--dx) * 1px), calc(var(--dy) * var(--etalement)))
+		rotate(calc(var(--rot) * 1deg))
+		scale(calc(1 - var(--dy) * .012));
 	transition: transform .5s cubic-bezier(.22, .61, .36, 1), opacity .4s ease;
 }
 

@@ -10,10 +10,23 @@ Les numéros suivent [semver](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORR
 
 | Version | Commits | Date | En une phrase |
 | --- | --- | --- | --- |
+| [0.3.0] | 3 | 2026-09-22 | Le paquet remplit la fenêtre, étalé à la main et jamais deux fois pareil |
 | [0.2.0] | 2 | 2026-09-22 | Paquet étalé, retournement sans couture, dos Art déco et Art nouveau |
 | [0.1.0] | 1 | 2026-09-22 | Première version : six cartes à prédictions, PWA hors-ligne |
 
 ---
+
+## [0.3.0] — 2026-09-22
+
+3 commits
+
+Le paquet occupe enfin toute la fenêtre, et ne retombe jamais deux fois de la même façon.
+
+- **L'étalement se calcule sur la place réellement disponible.** La carte prend d'abord la plus grande taille qui tienne en largeur, sans dépasser 58 % de la hauteur libre ; puis **tout ce qui reste en dessous se partage entre les cinq cartes du fond**. Sur un iPhone 15, le paquet passe d'environ 500 px de haut à près de 690 : il remplit la fenêtre au lieu de flotter au milieu. Sur un écran court, ou téléphone tourné, l'étalement se resserre de lui-même — les deux plafonds se répondent pour que la pile n'occupe jamais plus de 93 % de la hauteur libre.
+- **L'étalement est irrégulier, et différent à chaque remise du paquet.** Les écarts d'une carte à l'autre sont tirés au sort, comme un paquet étalé à la main, avec un léger décalage latéral et une inclinaison propres à chaque carte. Les écarts sont ensuite ramenés à leur somme exacte : la pile occupe toujours la même hauteur, quelle que soit la façon dont le hasard l'a répartie, et ne déborde donc jamais. La carte du dessus reste toujours posée bien droite — c'est celle qu'on lit.
+- Le tirage part d'un **semis gardé le temps de la session** : un rechargement de la page (mise à jour installée, onglet rouvert par le système) retrouve le paquet exactement tel qu'il était, sans réétaler les cartes sous les yeux du public. Seuls « Remettre le paquet », le double toucher sur l'écran vide et la touche R en tirent un nouveau — y compris quand le paquet était déjà neuf, pour que le nouvel étalement se voie tout de suite.
+- L'inclinaison d'ensemble de la pile est réduite de moitié : avec un étalement deux fois plus large, l'ancienne pente faisait partir le paquet en biais.
+- Nouveau module `src/logic/etalement.ts`, sans DOM et testé sous Node : ordre des cartes, hauteur totale constante, irrégularité, et le fait qu'un même semis redonne toujours le même paquet.
 
 ## [0.2.0] — 2026-09-22
 
@@ -73,5 +86,6 @@ gh release create v0.2.0 --title "v0.2.0 — Titre" --notes-file notes.md
 
 
 
+[0.3.0]: https://github.com/dezande/six-predictions/releases/tag/v0.3.0
 [0.2.0]: https://github.com/dezande/six-predictions/releases/tag/v0.2.0
 [0.1.0]: https://github.com/dezande/six-predictions/releases/tag/v0.1.0

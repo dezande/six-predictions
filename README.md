@@ -33,7 +33,7 @@ Les textes livrés avec cette version sont du **lorem ipsum** : ils sont là pou
 | --- | --- |
 | **Toucher** n'importe où, carte face cachée | La carte du dessus se retourne et montre sa prédiction |
 | **Toucher** à nouveau | La carte sort du cadre ; la suivante est dessous |
-| **Deux touchers rapprochés**, écran vide | Le paquet revient au complet, faces en bas |
+| **Deux touchers rapprochés**, écran vide | Le paquet revient au complet, faces en bas, dans un nouvel étalement |
 | **Appui de 3 s** n'importe où | Menu |
 
 Le toucher compte partout sur l'écran, pas seulement sur la carte : il n'y a pas de zone à viser en scène.
@@ -45,7 +45,7 @@ Les gestes sont réglés pour un vrai doigt : un toucher peut durer jusqu'à 0,8
 | Touche (clavier ou télécommande) | Effet |
 | --- | --- |
 | → ↓ Espace Entrée Page suivante | Toucher la carte du dessus |
-| R ou Début | Remettre le paquet, faces en bas |
+| R ou Début | Remettre le paquet, faces en bas, dans un nouvel étalement |
 | Échap ou M | Menu |
 
 ### Les cartes
@@ -61,7 +61,11 @@ Le **dos des cartes** se choisit dans le menu, en deux réglages qui se combinen
 
 Les deux dessins sont des tracés vectoriels ([`src/stage/dos.ts`](src/stage/dos.ts)) : ils restent nets à toutes les tailles d'écran, ne pèsent presque rien dans le cache hors-ligne, et suivent la couleur choisie sans qu'il faille préparer une image par combinaison.
 
-Les six cartes sont **étalées de haut en bas** : chacune descend d'un cran sous la précédente et s'incline à peine, si bien que tout le paquet se voit d'un coup d'œil. L'étalement se calcule sur la hauteur de l'écran, et la carte prend ensuite la plus grande taille qui tienne dans ce qui reste.
+Les six cartes sont **étalées de haut en bas**, et le paquet remplit la fenêtre : la carte prend d'abord la plus grande taille qui tienne en largeur, sans dépasser 58 % de la hauteur libre, puis **tout ce qui reste en dessous se partage entre les cinq cartes du fond**. Sur un téléphone haut, l'étalement est donc large ; sur un écran court, ou téléphone tourné, il se resserre de lui-même — la pile ne déborde jamais.
+
+L'étalement est **irrégulier, et différent à chaque fois qu'on remet le paquet** : les écarts d'une carte à l'autre sont tirés au sort, comme un paquet étalé à la main, avec un léger décalage latéral et une inclinaison propres à chaque carte. Les écarts sont ensuite ramenés à leur somme exacte, si bien que la pile occupe toujours la même hauteur quelle que soit la façon dont le hasard l'a répartie. La carte du dessus, elle, reste toujours posée bien droite : c'est celle qu'on lit.
+
+Le tirage part d'un semis gardé le temps de la session : un rechargement de la page — une mise à jour installée, un onglet rouvert par le système — retrouve le paquet exactement tel qu'il était, sans réétaler les cartes sous les yeux du public. Seul « Remettre le paquet » (ou le double toucher sur l'écran vide) en tire un nouveau.
 
 ### Français ou anglais
 
@@ -94,7 +98,7 @@ Sur iPhone, l'app installée a son propre stockage, séparé de Safari : **ouvre
 
 1. **Hors-ligne** : ouvrir l'app installée avec du réseau, ouvrir le menu (appui de 3 s) et vérifier que « Cache hors-ligne » affiche un nom `six-predictions-…`. Fermer l'app (la faire glisser vers le haut dans le sélecteur d'apps), passer en mode avion, la rouvrir, jouer les six cartes et remettre le paquet.
 2. **Écran allumé** : dans Réglages → Luminosité et affichage → Verrouillage automatique, choisir 30 secondes. Ouvrir l'app, toucher une fois l'écran, puis ne plus y toucher pendant 2 minutes : l'écran ne doit ni baisser ni s'éteindre. Refaire le test en mode économie d'énergie, qui peut couper la vidéo. Remettre ensuite le verrouillage automatique habituel.
-3. **Portrait** : tourner le téléphone dans les deux sens ; l'affichage reste dans l'axe du téléphone et les touchers continuent de retourner les cartes.
+3. **Portrait** : tourner le téléphone dans les deux sens ; l'affichage reste dans l'axe du téléphone, la pile se resserre pour tenir dans l'écran, et les touchers continuent de retourner les cartes.
 4. **L'écriture et le retournement** : vérifier que les prédictions s'affichent bien en écriture manuscrite, qu'aucune ne déborde de sa carte, et que la carte tourne d'un seul tenant, sans trait au milieu.
 5. **Version** : après une publication, rouvrir l'app avec du réseau, la fermer et la rouvrir : le bas du menu doit afficher le nouveau numéro de build et un nouveau nom de cache, et les réglages (langue, dos des cartes) doivent être restés les mêmes. L'app doit s'ouvrir sur un paquet neuf.
 
@@ -137,8 +141,8 @@ Organisation de `src/` : voir le commentaire en tête de [`src/app.ts`](src/app.
 
 ### Tests
 
-- **Tests unitaires** (`tests/logic/`) : la logique pure de `src/logic/` sous Node — l'état du paquet (retournement, sortie, remise en place, état relu abîmé), les gestes avec des rythmes lents et hésitants, les touches, les réglages, les langues — et la validité du contenu de `src/content/cartes.ts` et `src/content/interface.ts` dans les deux langues.
-- **Tests dans Chrome** (`tests/e2e/app.e2e.ts`) : l'app compilée dans Chrome sans interface, sur un écran de téléphone simulé, avec de vrais événements tactiles et clavier. La routine entière jusqu'à l'écran vide, le toucher isolé qui ne fait rien et le double toucher qui remet le paquet, deux touchers vifs, le toucher hors de la carte, la reprise du paquet au rechargement et les données abîmées, le clavier, l'appui de 3 s et le menu (aller à une carte, remettre le paquet, langue, motif et couleur du dos sans toucher au paquet en cours, réglages par défaut), l'étalement de la pile, l'isolement 3D de chaque carte, aucune prédiction qui déborde dans les deux langues et téléphone tourné, et le fonctionnement hors-ligne.
+- **Tests unitaires** (`tests/logic/`) : la logique pure de `src/logic/` sous Node — l'état du paquet (retournement, sortie, remise en place, état relu abîmé), l'étalement tiré au sort (ordre, hauteur totale, irrégularité, reproductibilité d'un semis), les gestes avec des rythmes lents et hésitants, les touches, les réglages, les langues — et la validité du contenu de `src/content/cartes.ts` et `src/content/interface.ts` dans les deux langues.
+- **Tests dans Chrome** (`tests/e2e/app.e2e.ts`) : l'app compilée dans Chrome sans interface, sur un écran de téléphone simulé, avec de vrais événements tactiles et clavier. La routine entière jusqu'à l'écran vide, le toucher isolé qui ne fait rien et le double toucher qui remet le paquet, deux touchers vifs, le toucher hors de la carte, la reprise du paquet au rechargement et les données abîmées, le clavier, l'appui de 3 s et le menu (aller à une carte, remettre le paquet, langue, motif et couleur du dos sans toucher au paquet en cours, réglages par défaut), l'étalement de la pile (irrégulier, renouvelé à chaque remise, conservé au rechargement, toujours dans l'écran), l'isolement 3D de chaque carte, aucune prédiction qui déborde dans les deux langues et téléphone tourné, et le fonctionnement hors-ligne.
 - Les outils communs sont dans `tests/e2e/helpers.ts`. Il faut Google Chrome, trouvé automatiquement (sinon, indiquez son chemin dans `CHROME_PATH`).
 - Le calcul du nom de cache au build, la vérification du build, le serveur local et les calculs de rotation sont testés dans le kit.
 

@@ -32,6 +32,8 @@ Tout le texte est dans **[`src/content/cartes.ts`](src/content/cartes.ts)** : un
 
 **Chaque prédiction est soulignée** d'un trait tracé à la main, de la même encre et de la même grosseur que les lettres — parfois deux traits, parfois ondulé. Le soulignement suit le mot, y compris en diagonale.
 
+Une marge d'encre, donnée en `em`, entoure le texte dans le bloc mesuré : une écriture penchée déborde de la case que le navigateur mesure — l'encre d'un `!` sort de sa largeur d'avance — et le mot venait sinon frôler le bord de la carte.
+
 ## Utilisation
 
 | Geste | Effet |

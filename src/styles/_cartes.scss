@@ -261,6 +261,13 @@
 // La prédiction elle-même, écrite à la main. Sa taille vient du bloc écrit (.ecriture).
 .prediction {
 	margin: 0;
+	/*
+	 * Une écriture penchée déborde de la case que le navigateur mesure : l'encre d'un « ! » ou
+	 * d'une majuscule inclinée sort de sa largeur d'avance, et le mot venait frôler le bord de la
+	 * carte. Cette marge entre dans la mesure de l'ajustement (stage/paquet.ts), et comme elle est
+	 * donnée en `em`, elle grandit avec le texte.
+	 */
+	padding: .06em .14em;
 	font-family: $manuscrit;
 	font-weight: 600;
 	line-height: 1.22;

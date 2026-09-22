@@ -10,6 +10,7 @@ Les numéros suivent [semver](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORR
 
 | Version | Commits | Date | En une phrase |
 | --- | --- | --- | --- |
+| [0.6.0] | 6 | 2026-09-23 | Les vraies prédictions, qui remplissent la carte et partent en diagonale |
 | [0.5.0] | 5 | 2026-09-22 | Tapis vert, six dos et quatre couleurs choisis à l'œil, paquet neuf à chaque ouverture |
 | [0.4.0] | 4 | 2026-09-22 | Les cartes restantes ne remontent plus quand celle du dessus part |
 | [0.3.0] | 3 | 2026-09-22 | Le paquet remplit la fenêtre, étalé à la main et jamais deux fois pareil |
@@ -17,6 +18,20 @@ Les numéros suivent [semver](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORR
 | [0.1.0] | 1 | 2026-09-22 | Première version : six cartes à prédictions, PWA hors-ligne |
 
 ---
+
+## [0.6.0] — 2026-09-23
+
+6 commits
+
+Les vraies prédictions remplacent le lorem ipsum, et la carte est faite pour elles.
+
+- **Les six prédictions** : `NO!`, `NEITHER!`, `NOTHING!`, `UYYYY!`, `THIS ONE YES!` et `NONE`. Les mêmes dans les deux langues — ce sont des interjections. La petite ligne d'en-tête disparaît des cartes ; le champ reste disponible pour qui en voudrait une.
+- **La prédiction remplit la carte.** Sa taille est calculée pour occuper toute la place : un mot court frappe plein cadre au lieu de flotter au milieu. L'ajustement ne faisait plus que rétrécir ; il agrandit maintenant aussi, jusqu'à douze fois la taille de référence.
+- **Correction au passage : l'ajustement du texte ne faisait rien du tout.** L'échelle calculée était posée sur la carte, mais redéclarée à `1` sur le bloc de texte juste en dessous, ce qui l'écrasait. Toutes les prédictions s'affichaient donc à la taille écrite dans la feuille de style. Le débordement ne se voyait pas non plus : la grille de l'avant de la carte s'élargissait au texte au lieu de le contraindre, si bien qu'aucun dépassement n'était jamais détecté.
+- **Les prédictions les plus longues sont écrites en diagonale**, d'un coin à l'autre de la carte : la diagonale est bien plus longue que la largeur, et `NEITHER!` comme `NOTHING!` y gagnent un quart de taille. Un mot court reste d'aplomb — l'incliner ne le grandirait pas, seulement le rendrait moins lisible — et un texte sur plusieurs lignes aussi.
+- **Les lignes ne sont plus coupées automatiquement** : c'est un retour à la ligne dans `src/content/cartes.ts` qui décide où ça casse, et rien d'autre. `THIS ONE YES!` tient ainsi un mot par ligne, sur toute la hauteur de la carte.
+- **Chaque prédiction est soulignée** d'un trait tracé à la main — parfois deux, parfois ondulé, jamais à la règle. Même encre et même grosseur que les lettres, et il suit le mot jusque dans la diagonale.
+- Les marges de l'avant de la carte sont resserrées sur les côtés, où chaque pixel gagné fait grandir la prédiction d'autant.
 
 ## [0.5.0] — 2026-09-22
 
@@ -111,6 +126,7 @@ gh release create v0.2.0 --title "v0.2.0 — Titre" --notes-file notes.md
 
 
 
+[0.6.0]: https://github.com/dezande/six-predictions/releases/tag/v0.6.0
 [0.5.0]: https://github.com/dezande/six-predictions/releases/tag/v0.5.0
 [0.4.0]: https://github.com/dezande/six-predictions/releases/tag/v0.4.0
 [0.3.0]: https://github.com/dezande/six-predictions/releases/tag/v0.3.0

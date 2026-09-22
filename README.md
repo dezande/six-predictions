@@ -10,22 +10,27 @@ Une PWA mono-page, 100 % hors-ligne, pilotée au doigt, au clavier ou avec une t
 Tout le texte est dans **[`src/content/cartes.ts`](src/content/cartes.ts)** : une entrée par carte, dans l'ordre. La première du tableau est celle du dessus du paquet.
 
 ```ts
-{
-	entete: { fr: 'Première prédiction', en: 'First prediction' },
-	texte: { fr: 'Le sept de cœur', en: 'The seven of hearts' },
-},
+{ texte: 'NO!' },
+{ texte: 'THIS\nONE\nYES!' },
+{ texte: { fr: 'Le sept de cœur', en: 'The seven of hearts' } },
 ```
 
 | Champ | Rôle |
 | --- | --- |
-| `texte` | **Obligatoire.** La prédiction, écrite à la main au dos de la carte |
-| `entete` | Une petite ligne au-dessus, plus discrète : une date, un nom, un numéro |
+| `texte` | **Obligatoire.** La prédiction, écrite à la main sur la carte |
+| `entete` | Une petite ligne au-dessus, plus discrète : une date, un nom, un numéro. Facultatif, et aucune des six cartes actuelles ne s'en sert |
 
-**Deux langues.** Chaque champ s'écrit soit une seule fois (le même dans les deux langues : un nombre, un nom propre), soit une fois par langue : `{ fr: '…', en: '…' }`. Une traduction oubliée ou vide fait échouer `npm test`, comme un champ mal orthographié. Le texte du menu, lui, est dans [`src/content/interface.ts`](src/content/interface.ts).
+**Deux langues.** Chaque champ s'écrit soit une seule fois (le même dans les deux langues : un nombre, un nom propre, une interjection), soit une fois par langue : `{ fr: '…', en: '…' }`. Une traduction oubliée ou vide fait échouer `npm test`, comme un champ mal orthographié. Le texte du menu, lui, est dans [`src/content/interface.ts`](src/content/interface.ts).
 
-La taille du texte s'adapte à la carte : il rétrécit juste ce qu'il faut pour ne jamais déborder. Une prédiction longue reste lisible, mais **une prédiction courte frappe plus fort**.
+### Comment la prédiction est mise en page
 
-Les textes livrés avec cette version sont du **lorem ipsum** : ils sont là pour montrer la mise en page, et attendent les vraies prédictions.
+**Elle remplit la carte.** Sa taille est calculée pour occuper toute la place disponible : un mot court frappe plein cadre, un texte long rétrécit juste ce qu'il faut. Rien à régler.
+
+**Les plus longues sont écrites en diagonale.** La diagonale d'une carte est bien plus longue que sa largeur : quand un mot y gagne au moins 12 %, il est tracé en biais, d'un coin à l'autre. Un mot court reste d'aplomb — l'incliner ne le grandirait pas, seulement le rendrait moins lisible. Un texte sur plusieurs lignes reste toujours droit.
+
+**Les lignes ne sont jamais coupées toutes seules.** C'est un retour à la ligne (`\n`) dans le texte qui décide où ça casse, et rien d'autre : `'THIS\nONE\nYES!'` donne un mot par ligne.
+
+**Chaque prédiction est soulignée** d'un trait tracé à la main, de la même encre et de la même grosseur que les lettres — parfois deux traits, parfois ondulé. Le soulignement suit le mot, y compris en diagonale.
 
 ## Utilisation
 
@@ -103,7 +108,7 @@ Sur iPhone, l'app installée a son propre stockage, séparé de Safari : **ouvre
 1. **Hors-ligne** : ouvrir l'app installée avec du réseau, ouvrir le menu (appui de 3 s) et vérifier que « Cache hors-ligne » affiche un nom `six-predictions-…`. Fermer l'app (la faire glisser vers le haut dans le sélecteur d'apps), passer en mode avion, la rouvrir, jouer les six cartes et remettre le paquet.
 2. **Écran allumé** : dans Réglages → Luminosité et affichage → Verrouillage automatique, choisir 30 secondes. Ouvrir l'app, toucher une fois l'écran, puis ne plus y toucher pendant 2 minutes : l'écran ne doit ni baisser ni s'éteindre. Refaire le test en mode économie d'énergie, qui peut couper la vidéo. Remettre ensuite le verrouillage automatique habituel.
 3. **Portrait** : tourner le téléphone dans les deux sens ; l'affichage reste dans l'axe du téléphone, la pile se resserre pour tenir dans l'écran, et les touchers continuent de retourner les cartes.
-4. **L'écriture et le retournement** : vérifier que les prédictions s'affichent bien en écriture manuscrite, qu'aucune ne déborde de sa carte, et que la carte tourne d'un seul tenant, sans trait au milieu.
+4. **L'écriture et le retournement** : vérifier que les prédictions s'affichent bien en écriture manuscrite, qu'elles remplissent la carte sans déborder, que les plus longues partent en diagonale, et que la carte tourne d'un seul tenant, sans trait au milieu.
 5. **Version** : après une publication, rouvrir l'app avec du réseau, la fermer et la rouvrir : le bas du menu doit afficher le nouveau numéro de build et un nouveau nom de cache, et les réglages (langue, dos des cartes) doivent être restés les mêmes. L'app doit s'ouvrir sur les six cartes.
 
 ## Publication
@@ -146,7 +151,7 @@ Organisation de `src/` : voir le commentaire en tête de [`src/app.ts`](src/app.
 ### Tests
 
 - **Tests unitaires** (`tests/logic/`) : la logique pure de `src/logic/` sous Node — l'état du paquet (retournement, sortie, remise en place, état relu abîmé), l'étalement tiré au sort (ordre, hauteur totale, irrégularité, reproductibilité d'un semis), les gestes avec des rythmes lents et hésitants, les touches, les réglages, les langues — et la validité du contenu de `src/content/cartes.ts` et `src/content/interface.ts` dans les deux langues.
-- **Tests dans Chrome** (`tests/e2e/app.e2e.ts`) : l'app compilée dans Chrome sans interface, sur un écran de téléphone simulé, avec de vrais événements tactiles et clavier. La routine entière jusqu'à l'écran vide, le toucher isolé qui ne fait rien et le double toucher qui remet le paquet, deux touchers vifs, le toucher hors de la carte, les six cartes retrouvées à chaque ouverture, le clavier, l'appui de 3 s et le menu (aller à une carte, remettre le paquet, langue, dessin et couleur du dos — « mélange » compris — sans toucher au paquet en cours, boutons qui montrent la carte et non son nom, réglages par défaut), l'étalement de la pile (irrégulier, renouvelé à chaque remise et à chaque ouverture, toujours dans l'écran, et immobile quand une carte s'envole), l'isolement 3D de chaque carte, aucune prédiction qui déborde dans les deux langues et téléphone tourné, et le fonctionnement hors-ligne.
+- **Tests dans Chrome** (`tests/e2e/app.e2e.ts`) : l'app compilée dans Chrome sans interface, sur un écran de téléphone simulé, avec de vrais événements tactiles et clavier. La routine entière jusqu'à l'écran vide, le toucher isolé qui ne fait rien et le double toucher qui remet le paquet, deux touchers vifs, le toucher hors de la carte, les six cartes retrouvées à chaque ouverture, les prédictions qui remplissent leur carte, la diagonale des plus longues, les retours à la ligne et les soulignements, le clavier, l'appui de 3 s et le menu (aller à une carte, remettre le paquet, langue, dessin et couleur du dos — « mélange » compris — sans toucher au paquet en cours, boutons qui montrent la carte et non son nom, réglages par défaut), l'étalement de la pile (irrégulier, renouvelé à chaque remise et à chaque ouverture, toujours dans l'écran, et immobile quand une carte s'envole), l'isolement 3D de chaque carte, aucune prédiction qui déborde dans les deux langues et téléphone tourné, et le fonctionnement hors-ligne.
 - Les outils communs sont dans `tests/e2e/helpers.ts`. Il faut Google Chrome, trouvé automatiquement (sinon, indiquez son chemin dans `CHROME_PATH`).
 - Le calcul du nom de cache au build, la vérification du build, le serveur local et les calculs de rotation sont testés dans le kit.
 

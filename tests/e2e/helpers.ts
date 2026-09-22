@@ -125,16 +125,21 @@ export async function turnPhone(page: Page, angle: 0 | 90 | 270): Promise<void> 
 	await page.waitFor(`document.querySelector('#app').dataset.rotation === '${angle === 0 ? 0 : angle === 90 ? -90 : 90}'`, `rotation pour l'angle ${angle}`, 3000);
 }
 
-/** Cartes dont la prédiction sort de sa carte, avec l'échelle de texte calculée. */
-export const DEBORDEMENTS = `[...document.querySelectorAll('#paquet .carte')].filter((carte) => {
+/**
+ * Cartes dont le bloc écrit sort de sa carte. Mesuré comme l'ajustement le fait (stage/paquet.ts) :
+ * le bloc est mesuré sans sa rotation, et son encombrement une fois penché est calculé.
+ */
+export const DEBORDEMENTS = `[...document.querySelectorAll('#paquet .carte')].map((carte) => {
 	const avant = carte.querySelector('.avant');
-	const corps = carte.querySelector('.carte-corps');
+	const ecriture = carte.querySelector('.ecriture');
 	const style = getComputedStyle(avant);
-	const height = avant.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
-	return corps.scrollHeight > height + 1 || corps.scrollWidth > corps.clientWidth + 1;
-}).map((carte) => ({
-	carte: Number(carte.dataset.index) + 1,
-	fit: carte.style.getPropertyValue('--fit'),
-	contenu: carte.querySelector('.carte-corps').scrollHeight,
-	place: Math.round(carte.querySelector('.avant').clientHeight),
-}))`;
+	const place = [
+		avant.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
+		avant.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom),
+	];
+	const rad = (parseFloat(carte.style.getPropertyValue('--angle')) || 0) * Math.PI / 180;
+	const [c, s] = [Math.abs(Math.cos(rad)), Math.abs(Math.sin(rad))];
+	const [w, h] = [ecriture.offsetWidth, ecriture.offsetHeight];
+	const pris = [w * c + h * s, w * s + h * c];
+	return { carte: Number(carte.dataset.index) + 1, fit: carte.style.getPropertyValue('--fit'), pris: pris.map(Math.round), place: place.map(Math.round) };
+}).filter((m) => m.pris[0] > m.place[0] + 1 || m.pris[1] > m.place[1] + 1)`;

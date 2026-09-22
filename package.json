@@ -6,7 +6,7 @@
 	"kit": {
 		"name": "Les six prédictions",
 		"cachePrefix": "six-predictions",
-		"requiredFiles": ["content/cartes.js", "stage/paquet.js", "stage/dos.js", "settings/panel.js"]
+		"requiredFiles": ["content/cartes.js", "stage/paquet.js", "stage/dos.js", "settings/panel.js", "fonts/caveat-latin.woff2"]
 	},
 	"engines": {
 		"node": ">=24 <25"

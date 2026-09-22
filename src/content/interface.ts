@@ -51,11 +51,23 @@ export const INTERFACE = {
 		en: 'Keyboard or presenter remote: → space Page Down to tap the card, R to reset the deck, Esc or M for the menu.',
 	},
 
-	// Dos des cartes (la valeur enregistrée, elle, ne change pas : logic/settings.ts).
+	/*
+	 * Dos des cartes (la valeur enregistrée, elle, ne change pas : logic/settings.ts).
+	 * Ces noms ne sont plus écrits dans le menu, où chaque bouton montre le dos lui-même : ils
+	 * servent d'étiquette aux lecteurs d'écran, qui ne voient pas les vignettes.
+	 */
 	'motif.deco': { fr: 'Art déco', en: 'Art deco' },
 	'motif.nouveau': { fr: 'Art nouveau', en: 'Art nouveau' },
+	'motif.pixel': { fr: 'Pixel art', en: 'Pixel art' },
+	'motif.minimal': { fr: 'Minimaliste', en: 'Minimalist' },
+	'motif.pop': { fr: 'Pop art', en: 'Pop art' },
+	'motif.futuriste': { fr: 'Futuriste', en: 'Futuristic' },
+	'motif.mix': { fr: 'Mélange : un dos différent par carte', en: 'Mix: a different back on each card' },
 	'couleur.noir': { fr: 'Noir', en: 'Black' },
 	'couleur.rouge': { fr: 'Rouge', en: 'Red' },
+	'couleur.bleu': { fr: 'Bleu', en: 'Blue' },
+	'couleur.blanc': { fr: 'Blanc', en: 'White' },
+	'couleur.mix': { fr: 'Mélange : une couleur différente par carte', en: 'Mix: a different colour on each card' },
 
 	// Cartes et paquet.
 	'carte.vide': { fr: 'Le paquet est vide', en: 'The deck is empty' },

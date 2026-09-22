@@ -1,24 +1,30 @@
 /*
- * Les dos de cartes, dessinés en SVG : Art déco et Art nouveau.
+ * Les dos de cartes, dessinés en SVG.
  *
- * Deux styles opposés, tous deux d'époque — l'un géométrique, l'autre végétal — au trait doré sur
- * fond rouge ou noir (la couleur vient du réglage, styles/_cartes.scss). Un dessin vectoriel plutôt
- * qu'une image : il reste net à toutes les tailles d'écran, ne pèse rien dans le cache hors-ligne,
- * et suit la couleur choisie sans qu'on ait à préparer un fichier par combinaison.
+ * Six dessins, d'époques et d'esprits différents — Art déco, Art nouveau, pixel art, minimaliste,
+ * pop art et futuriste — tracés dans la couleur du réglage, sur le fond du réglage
+ * (styles/_cartes.scss). Un dessin vectoriel plutôt qu'une image : il reste net à toutes les
+ * tailles d'écran, ne pèse rien dans le cache hors-ligne, et suit la couleur choisie sans qu'on
+ * ait à préparer un fichier par combinaison — six dessins fois quatre couleurs feraient
+ * vingt-quatre images.
  *
  * Le repère est celui de la carte, marge de papier déduite : 100 de large pour 140 de haut, soit
  * exactement le rapport d'une carte à jouer. Le SVG s'étire jusqu'aux bords (preserveAspectRatio
  * « none ») sans déformer le dessin.
  */
 
-import type { Motif } from '../logic/settings.ts';
+import { DESSINS, type Dessin } from '../logic/settings.ts';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-/** Un trait du dessin : son chemin, son épaisseur, et s'il se reprend en miroir de l'autre côté. */
+/**
+ * Un élément du dessin : son chemin, puis comment il est peint — au trait de `w` d'épaisseur, ou
+ * en aplat quand `w` est absent. `o` l'éclaircit, `miroir` le reprend de l'autre côté de la carte.
+ */
 interface Trait {
 	d: string;
-	w: number;
+	w?: number;
+	o?: number;
 	miroir?: true;
 }
 
@@ -103,13 +109,167 @@ const NOUVEAU: Trait[] = [
 	{ d: 'M50 29A27 27 0 1 1 50 83A27 27 0 1 1 50 29Z', w: .45 },
 ];
 
-const MOTIFS: Record<Motif, Trait[]> = { deco: DECO, nouveau: NOUVEAU };
+/* ---------- Pixel art : le dessin posé case par case ---------- */
 
 /**
- * Le dos d'une carte dans le motif demandé. Le dessin prend la couleur du texte (`currentColor`),
- * posée par le réglage de couleur.
+ * Une grille de 10 × 14 cases de 10 unités, dessinée d'après un damier écrit en toutes lettres :
+ * « # » pose une case pleine, tout le reste la laisse vide. Le dessin se relit donc à l'œil.
  */
-export function buildDos(motif: Motif): SVGSVGElement {
+function damier(lignes: readonly string[]): string {
+	const cote = 10;
+	let d = '';
+	lignes.forEach((ligne, y) => {
+		[...ligne].forEach((case_, x) => {
+			if (case_ !== '#') return;
+			d += `M${x * cote} ${y * cote}h${cote}v${cote}h${-cote}Z`;
+		});
+	});
+	return d;
+}
+
+const PIXEL: Trait[] = [
+	{
+		d: damier([
+			'##########',
+			'#........#',
+			'#........#',
+			'#...##...#',
+			'#..#..#..#',
+			'#.#....#.#',
+			'##..##..##',
+			'##..##..##',
+			'#.#....#.#',
+			'#..#..#..#',
+			'#...##...#',
+			'#........#',
+			'#........#',
+			'##########',
+		]),
+	},
+	// Une seconde grille, en retrait, donne au cadre son épaisseur de vieil écran.
+	{
+		d: damier([
+			'..........',
+			'.########.',
+			'.#......#.',
+			'.#......#.',
+			'.#......#.',
+			'.#......#.',
+			'.#......#.',
+			'.#......#.',
+			'.#......#.',
+			'.#......#.',
+			'.#......#.',
+			'.#......#.',
+			'.########.',
+			'..........',
+		]),
+		o: .22,
+	},
+];
+
+/* ---------- Minimaliste : presque rien ---------- */
+
+const MINIMAL: Trait[] = [
+	{ d: rect(10, 10, 80, 120, 0), w: .5 },
+	{ d: 'M50 54A16 16 0 1 1 50 86A16 16 0 1 1 50 54Z', w: 1 },
+	{ d: 'M50 67A3 3 0 1 1 50 73A3 3 0 1 1 50 67Z' },
+];
+
+/* ---------- Pop art : trame de points et étoile d'explosion ---------- */
+
+/** Une trame de points pleins : le tramé des bandes dessinées imprimées. */
+function trame(pas: number, rayon: number): string {
+	let d = '';
+	for (let y = pas; y < 140; y += pas) {
+		for (let x = pas; x < 100; x += pas) {
+			// Une ligne sur deux est décalée d'un demi-pas : la trame ne fait pas de colonnes.
+			const cx = x + ((Math.round(y / pas) % 2) * pas) / 2;
+			if (cx > 100 - pas / 2) continue;
+			d += `M${cx - rayon} ${y}a${rayon} ${rayon} 0 1 0 ${rayon * 2} 0a${rayon} ${rayon} 0 1 0 ${-rayon * 2} 0Z`;
+		}
+	}
+	return d;
+}
+
+/** Une étoile d'explosion : des pointes inégales autour d'un centre, comme un « BOUM » dessiné. */
+function explosion(cx: number, cy: number, pointes: number, dedans: number, dehors: number): string {
+	let d = '';
+	for (let i = 0; i < pointes * 2; i++) {
+		const rayon = i % 2 === 0 ? dehors : dedans;
+		// Les pointes ne font pas toutes la même longueur : une explosion n'est pas une roue dentée.
+		const variation = i % 2 === 0 ? 1 - (i % 6) * .07 : 1;
+		const angle = ((i / (pointes * 2)) * 2 - .5) * Math.PI;
+		const x = cx + Math.cos(angle) * rayon * variation;
+		const y = cy + Math.sin(angle) * rayon * variation;
+		d += `${i === 0 ? 'M' : 'L'}${x.toFixed(2)} ${y.toFixed(2)}`;
+	}
+	return `${d}Z`;
+}
+
+const POP: Trait[] = [
+	{ d: trame(9, 1.5), o: .35 },
+	{ d: rect(4, 4, 92, 132, 2), w: 3 },
+	{ d: explosion(50, 70, 12, 14, 31), w: 2.6 },
+	{ d: explosion(50, 70, 12, 6, 13), o: .9 },
+];
+
+/* ---------- Futuriste : un cadran d'instrument ---------- */
+
+/** Un arc de cercle, de l'angle `de` à l'angle `a` (en degrés, 0 à droite). */
+function arc(cx: number, cy: number, r: number, de: number, a: number): string {
+	const point = (deg: number): string => {
+		const rad = (deg * Math.PI) / 180;
+		return `${(cx + Math.cos(rad) * r).toFixed(2)} ${(cy + Math.sin(rad) * r).toFixed(2)}`;
+	};
+	return `M${point(de)}A${r} ${r} 0 ${a - de > 180 ? 1 : 0} 1 ${point(a)}`;
+}
+
+/** Des graduations tout autour d'un cercle, tous les `pas` degrés. */
+function graduations(cx: number, cy: number, de: number, a: number, pas: number): string {
+	let d = '';
+	for (let angle = 0; angle < 360; angle += pas) {
+		const rad = (angle * Math.PI) / 180;
+		const [dx, dy] = [Math.cos(rad), Math.sin(rad)];
+		d += `M${(cx + dx * de).toFixed(2)} ${(cy + dy * de).toFixed(2)}L${(cx + dx * a).toFixed(2)} ${(cy + dy * a).toFixed(2)}`;
+	}
+	return d;
+}
+
+const FUTURISTE: Trait[] = [
+	// Un cadre aux angles coupés, comme une plaque de blindage.
+	{ d: 'M18 4H82L96 18V122L82 136H18L4 122V18Z', w: 1.2 },
+	{ d: 'M22 10H78L90 22V118L78 130H22L10 118V22Z', w: .4 },
+	// Équerres de visée dans les quatre coins.
+	{ d: 'M14 30V20H24M86 30V20H76M14 110V120H24M86 110V120H76', w: 1 },
+	// Cadran : deux arcs ouverts, un anneau plein de graduations, un cœur.
+	{ d: arc(50, 70, 30, -160, 70), w: 1.4 },
+	{ d: arc(50, 70, 30, 100, 170), w: 1.4 },
+	{ d: graduations(50, 70, 22, 26, 12), w: .5 },
+	{ d: arc(50, 70, 16, 20, 260), w: 2.4 },
+	{ d: 'M50 64A6 6 0 1 1 50 76A6 6 0 1 1 50 64Z' },
+	// Ligne de balayage et petits témoins, de part et d'autre du cadran.
+	{ d: 'M8 70H16M84 70H92', w: 1 },
+	{ d: 'M46 46h8v3h-8ZM46 91h8v3h-8Z' },
+];
+
+const MOTIFS: Record<Dessin, Trait[]> = {
+	deco: DECO,
+	nouveau: NOUVEAU,
+	pixel: PIXEL,
+	minimal: MINIMAL,
+	pop: POP,
+	futuriste: FUTURISTE,
+};
+
+/** Les dessins, dans l'ordre du menu. */
+export const DESSINS_DISPONIBLES = DESSINS;
+
+/**
+ * Le dos d'une carte dans le dessin demandé. Le tracé prend la couleur du texte (`currentColor`),
+ * posée par le réglage de couleur (styles/_cartes.scss).
+ */
+export function buildDos(dessin: Dessin): SVGSVGElement {
 	const svg = document.createElementNS(SVG_NS, 'svg');
 	svg.setAttribute('class', 'dos-motif');
 	svg.setAttribute('viewBox', '0 0 100 140');
@@ -122,10 +282,13 @@ export function buildDos(motif: Motif): SVGSVGElement {
 	groupe.setAttribute('stroke-linejoin', 'round');
 	// Les épaisseurs sont données dans le repère du dessin : elles grandissent avec la carte,
 	// comme le reste du motif.
-	for (const trait of MOTIFS[motif]) {
+	for (const trait of MOTIFS[dessin]) {
 		const path = groupe.appendChild(document.createElementNS(SVG_NS, 'path'));
 		path.setAttribute('d', trait.d);
-		path.setAttribute('stroke-width', String(trait.w));
+		// Sans épaisseur, la forme est un aplat : le tracé et le remplissage prennent la même couleur.
+		if (trait.w === undefined) path.setAttribute('fill', 'currentColor');
+		else path.setAttribute('stroke-width', String(trait.w));
+		if (trait.o !== undefined) path.setAttribute('opacity', String(trait.o));
 		if (trait.miroir) path.setAttribute('transform', 'translate(100 0) scale(-1 1)');
 	}
 	return svg;

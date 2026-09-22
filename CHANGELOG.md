@@ -10,12 +10,27 @@ Les numéros suivent [semver](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORR
 
 | Version | Commits | Date | En une phrase |
 | --- | --- | --- | --- |
+| [0.5.0] | 5 | 2026-09-22 | Tapis vert, six dos et quatre couleurs choisis à l'œil, paquet neuf à chaque ouverture |
 | [0.4.0] | 4 | 2026-09-22 | Les cartes restantes ne remontent plus quand celle du dessus part |
 | [0.3.0] | 3 | 2026-09-22 | Le paquet remplit la fenêtre, étalé à la main et jamais deux fois pareil |
 | [0.2.0] | 2 | 2026-09-22 | Paquet étalé, retournement sans couture, dos Art déco et Art nouveau |
 | [0.1.0] | 1 | 2026-09-22 | Première version : six cartes à prédictions, PWA hors-ligne |
 
 ---
+
+## [0.5.0] — 2026-09-22
+
+5 commits
+
+L'app prend ses couleurs de table de jeu, et le choix des dos se fait à l'œil.
+
+- **Un tapis vert.** Le fond sombre devient un feutre de table de casino : éclairé au centre, assombri vers les bords, avec un grain fin pour la texture du drap. Les cartes claires s'y détachent nettement mieux. La couleur de thème de l'app (barre d'état, écran de démarrage) suit.
+- **Quatre nouveaux dos**, en plus de l'Art déco et de l'Art nouveau : **pixel art** (un damier et une gemme en gros pixels), **minimaliste** (un filet, un cercle, un point — rien d'autre), **pop art** (trame de points imprimée et étoile d'explosion) et **futuriste** (cadran d'instrument, équerres de visée, graduations).
+- **Quatre couleurs de dos** : le **bleu** et le **blanc** rejoignent le noir et le rouge. Sur le dos blanc, le tracé passe à l'encre — l'or y disparaîtrait.
+- **Le choix « mélange »**, pour le dos comme pour la couleur : un dessin, ou une couleur, **différent à chaque carte**. Le paquet de six montre les six dessins dans l'ordre, et les quatre couleurs qui recommencent : rien n'est laissé au hasard, on sait d'avance ce que le public va voir.
+- **On choisit en regardant les cartes, plus en lisant des noms.** Les deux réglages deviennent des grilles de vignettes : chaque bouton porte une petite carte face cachée, dessinée exactement comme celles de la scène. Les dos sont montrés dans la couleur en cours, les couleurs dans le dos en cours — le menu montre donc toujours la carte telle qu'elle sera. Les noms restent en étiquette pour les lecteurs d'écran, qui ne voient pas les vignettes.
+- **L'app s'ouvre toujours sur les six cartes**, faces en bas et dans un nouvel étalement. L'état du paquet n'est plus gardé d'une ouverture à l'autre : on ouvre l'app pour jouer, pas pour reprendre la représentation précédente. Le code de reprise de session disparaît avec.
+- **L'icône est refaite** sur le tapis vert, avec les dos rouges à cadre doré de l'app. Au passage : le PNG de 192 px était **rogné** depuis la première version — Chrome coupe un SVG de 512 px au lieu de le réduire quand on lui demande une petite fenêtre. Il est maintenant fabriqué en réduisant le 512, et le README le dit.
 
 ## [0.4.0] — 2026-09-22
 
@@ -96,6 +111,7 @@ gh release create v0.2.0 --title "v0.2.0 — Titre" --notes-file notes.md
 
 
 
+[0.5.0]: https://github.com/dezande/six-predictions/releases/tag/v0.5.0
 [0.4.0]: https://github.com/dezande/six-predictions/releases/tag/v0.4.0
 [0.3.0]: https://github.com/dezande/six-predictions/releases/tag/v0.3.0
 [0.2.0]: https://github.com/dezande/six-predictions/releases/tag/v0.2.0

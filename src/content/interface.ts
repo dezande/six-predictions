@@ -17,6 +17,8 @@ export const INTERFACE = {
 	'menu.aller': { fr: 'Aller à la carte', en: 'Go to card' },
 	'menu.remettre': { fr: 'Remettre le paquet', en: 'Reset the deck' },
 	'menu.fermer': { fr: 'Fermer', en: 'Close' },
+	// Le nom de l'app qui regroupe tous les tours : le même dans les deux langues.
+	'menu.mesTours': 'Mes tours',
 	'menu.langue': { fr: 'Langue', en: 'Language' },
 	'menu.motif': { fr: 'Dos des cartes', en: 'Card back' },
 	'menu.couleur': { fr: 'Couleur du dos', en: 'Back colour' },

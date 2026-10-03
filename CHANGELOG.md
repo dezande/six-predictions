@@ -10,6 +10,7 @@ Les numéros suivent [semver](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORR
 
 | Version | Commits | Date | En une phrase |
 | --- | --- | --- | --- |
+| [1.1.0] | 12 | 2026-10-03 | Bouton « Mes tours » et identifiant propre, pour s'installer à côté des autres |
 | [1.0.1] | 9 | 2026-09-23 | Les « ! » ne frôlent plus le bord de la carte |
 | [1.0.0] | 8 | 2026-09-23 | Prête pour la scène : la même écriture sur tous les téléphones |
 | [0.6.1] | 7 | 2026-09-23 | Les prédictions en français |
@@ -22,7 +23,9 @@ Les numéros suivent [semver](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORR
 
 ---
 
-## [Non publié]
+## [1.1.0] — 2026-10-03
+
+12 commits
 
 - **L'app s'installe enfin à côté des autres accessoires de scène.** Son manifeste déclarait `"id": "./"`, que Chrome résout à partir de la racine du site, et non du dossier de l'app : la boule de cristal, l'analyseur, les six prédictions et Pile ou face avaient toutes le même identifiant, `https://dezande.github.io/`. Sur Android, dès que l'une était installée, Chrome prenait les autres pour elle : il proposait de les ouvrir au lieu de les installer, puis échouait (« Impossible d'ouvrir l'application »). L'identifiant est maintenant `/six-predictions/`, propre à l'app. Une version déjà installée est vue comme une autre app : la désinstaller, puis réinstaller.
 - **Un bouton « Mes tours » dans le menu**, pour revenir au menu principal de l'app « Mes tours » (https://dezande.github.io/), qui regroupe tous les tours dans une seule app installée. Chrome sur Android ne gère bien qu'une app installée par site : on installe désormais « Mes tours », et ce tour s'ouvre dedans.
@@ -159,6 +162,7 @@ gh release create v0.2.0 --title "v0.2.0 — Titre" --notes-file notes.md
 
 
 
+[1.1.0]: https://github.com/dezande/six-predictions/releases/tag/v1.1.0
 [1.0.1]: https://github.com/dezande/six-predictions/releases/tag/v1.0.1
 [1.0.0]: https://github.com/dezande/six-predictions/releases/tag/v1.0.0
 [0.6.1]: https://github.com/dezande/six-predictions/releases/tag/v0.6.1
